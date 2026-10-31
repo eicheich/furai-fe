@@ -571,12 +571,12 @@ export default function App() {
       )}
 
       {/* Reusable Footer across all pages */}
-      {view !== 'study' && view !== 'profile' && (
+      {view !== 'study' && (
         <Footer
           user={user}
           onNavigate={openPage}
           onOpenDemo={openDemo}
-          showCta={view !== 'login' && view !== 'register'}
+          showCta={view !== 'login' && view !== 'register' && view !== 'profile'}
         />
       )}
 

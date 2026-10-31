@@ -3739,102 +3739,76 @@ a {
   margin-top: 24px;
 }
 
-/* Habit box on profile page */
-.pf-habit-box {
-  background: #ffffff;
-  border: 2px solid var(--ink);
-  border-radius: 26px;
-  padding: clamp(24px, 3.5vw, 36px);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
 
-.pf-habit-badge {
+.pf-stage__actions {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.pf-habit-tag {
-  font-family: var(--f-display);
-  font-size: 11px;
-  background: var(--yellow);
-  border: 1.5px solid var(--ink);
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-
-.pf-habit-badge h4 {
-  font-family: var(--f-round);
-  font-weight: 800;
-  font-size: 18px;
-}
-
-.pf-habit-desc {
-  font-size: 13.5px;
-  line-height: 1.65;
-  color: var(--muted);
-}
-
-.pf-habit-perks {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  border-top: 1px solid var(--line);
-  padding-top: 14px;
-}
-
-.pf-habit-perk {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  color: var(--ink);
-}
-
-.pf-habit-perk__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--mint);
-  border: 1px solid var(--ink);
-  flex-shrink: 0;
-}
-
-.pf-settings-card {
-  margin-top: 8px;
-  background-color: var(--paper);
-  background-image:
-    linear-gradient(var(--line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--line) 1px, transparent 1px);
-  background-size: 20px 20px;
-  border: 2px solid var(--ink);
-  border-radius: 20px;
-  padding: 20px 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
+  gap: 12px;
+  margin-top: 14px;
   flex-wrap: wrap;
 }
 
-.pf-settings-card__text .jp-label {
-  font-size: 11px;
-  margin-bottom: 2px;
+.pf-stage__btn {
+  font-size: 13px !important;
+  padding: 8px 18px !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.pf-settings-card__text h3 {
-  font-family: var(--f-display);
-  font-size: 16px;
-  letter-spacing: -0.01em;
+/* Modal Tab Navigation */
+.pf-modal__tabs {
+  display: flex;
+  background: var(--paper);
+  border-bottom: 2px solid var(--ink);
+  padding: 10px 24px 0;
+  gap: 8px;
 }
 
-.pf-settings-card__text p {
-  font-size: 12px;
+.pf-modal__tab {
+  font-family: var(--f-round);
+  font-weight: 700;
+  font-size: 13.5px;
+  padding: 8px 18px;
+  border: 2px solid transparent;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
   color: var(--muted);
-  margin-top: 2px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
+
+.pf-modal__tab:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.pf-modal__tab.is-active {
+  color: var(--ink);
+  background: #ffffff;
+  border-color: var(--ink);
+  margin-bottom: -2px;
+  border-bottom: 2px solid #ffffff;
+}
+
+.pf-modal__action-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+.pf-modal-save {
+  font-size: 13.5px !important;
+  padding: 10px 22px !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 
 /* Settings Popup Modal */
 .pf-modal-backdrop {

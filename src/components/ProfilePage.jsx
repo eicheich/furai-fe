@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ArrowRight, Check, Sliders, X, RotateCcw, LogOut } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Sliders, X, RotateCcw, LogOut, User } from 'lucide-react';
 
 const ARCHETYPES = [
   { id: 'coder', title: 'Code & Debug', jp: '開発' },
@@ -35,6 +35,9 @@ export default function ProfilePage({ user, onUpdateUser, onLogout, onBackToStud
   const [settingsOpen, setSettingsOpen] = useState(() => {
     return window.location.hash === '#settings';
   });
+  const [modalTab, setModalTab] = useState(() => {
+    return window.location.hash === '#settings' ? 'preferences' : 'profile';
+  });
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [resetDone, setResetDone] = useState(false);
 
@@ -43,6 +46,17 @@ export default function ProfilePage({ user, onUpdateUser, onLogout, onBackToStud
   const [focus, setFocus] = useState(pref('furai_pref_focus', '25'));
   const [brk, setBrk] = useState(pref('furai_pref_break', '5'));
   const [potato, setPotato] = useState(pref('furai_pref_potato', 'false') === 'true');
+
+  useEffect(() => {
+    if (user) {
+      setForm({
+        name: user.name || 'Alex Ebi',
+        email: user.email || 'alex.ebi@campus.edu',
+        major: user.major || 'Computer Science',
+        archetypeId: user.archetypeId || 'coder',
+      });
+    }
+  }, [user]);
 
   const set = (key, val, setter) => {
     setter(val);
@@ -62,6 +76,11 @@ export default function ProfilePage({ user, onUpdateUser, onLogout, onBackToStud
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [settingsOpen]);
+
+  const openSettingsModal = (tab = 'preferences') => {
+    setModalTab(tab);
+    setSettingsOpen(true);
+  };
 
   const save = (e) => {
     e.preventDefault();
@@ -124,7 +143,7 @@ export default function ProfilePage({ user, onUpdateUser, onLogout, onBackToStud
           <button
             type="button"
             className="pill pill--light pf-bar__settings-btn"
-            onClick={() => setSettingsOpen(true)}
+            onClick={() => openSettingsModal('preferences')}
             title="Open Settings Menu"
           >
             <Sliders size={14} />
@@ -144,6 +163,23 @@ export default function ProfilePage({ user, onUpdateUser, onLogout, onBackToStud
                 <span className="pf-tag">{arch.jp}</span>
                 {form.major} — {form.email}
               </p>
+
+              <div className="pf-stage__actions">
+                <button
+                  type="button"
+                  className="pill pill--dark pf-stage__btn"
+                  onClick={() => openSettingsModal('profile')}
+                >
+                  <User size={13} /> Edit Profile （編集）
+                </button>
+                <button
+                  type="button"
+                  className="pill pill--light pf-stage__btn"
+                  onClick={() => openSettingsModal('preferences')}
+                >
+                  <Sliders size={13} /> Settings （設定）
+                </button>
+              </div>
             </div>
           </div>
 
@@ -183,113 +219,8 @@ export default function ProfilePage({ user, onUpdateUser, onLogout, onBackToStud
         </section>
       </div>
 
-      {/* Main Profile Info & Habit Overview */}
-      <section className="section pf-ledger">
-        {/* Form: About You */}
-        <form className="pf-block" onSubmit={save}>
-          <div className="pf-block__head">
-            <p className="jp-label">（編集）</p>
-            <h2 className="display">ABOUT YOU</h2>
-          </div>
-
-          <div className="pf-rows">
-            <label className="pf-row">
-              <span className="pf-row__label">Name</span>
-              <input
-                className="pf-input"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
-              />
-            </label>
-            <label className="pf-row">
-              <span className="pf-row__label">Email</span>
-              <input
-                type="email"
-                className="pf-input"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                required
-              />
-            </label>
-            <label className="pf-row">
-              <span className="pf-row__label">Studying</span>
-              <input
-                className="pf-input"
-                value={form.major}
-                onChange={(e) => setForm({ ...form, major: e.target.value })}
-              />
-            </label>
-            <div className="pf-row">
-              <span className="pf-row__label">Style</span>
-              <Seg
-                value={form.archetypeId}
-                options={ARCHETYPES.map((a) => [a.id, a.jp])}
-                onChange={(v) => setForm({ ...form, archetypeId: v })}
-              />
-            </div>
-          </div>
-
-          <button type="submit" className="pill pill--dark pf-save">
-            {saved ? (
-              <>
-                <Check size={15} /> Saved
-              </>
-            ) : (
-              <>
-                Save changes <ArrowRight size={15} />
-              </>
-            )}
-          </button>
-        </form>
-
-        {/* Study Habit Overview + Settings Modal Trigger Box */}
-        <div className="pf-block">
-          <div className="pf-block__head">
-            <p className="jp-label">（学習スタイル）</p>
-            <h2 className="display">HABIT PROFILE</h2>
-          </div>
-
-          <div className="pf-habit-box">
-            <div className="pf-habit-badge">
-              <span className="pf-habit-tag">{arch.jp}</span>
-              <h4>{arch.title}</h4>
-            </div>
-            <p className="pf-habit-desc">
-              Configured for personalized posture tolerance thresholds during prolonged workstation sessions.
-            </p>
-
-            <div className="pf-habit-perks">
-              <div className="pf-habit-perk">
-                <span className="pf-habit-perk__dot" />
-                <span>Camera feed analyzed entirely in local browser memory</span>
-              </div>
-              <div className="pf-habit-perk">
-                <span className="pf-habit-perk__dot" />
-                <span>Pomodoro breaks automatically trigger cervical spine stretches</span>
-              </div>
-            </div>
-
-            <div className="pf-settings-card">
-              <div className="pf-settings-card__text">
-                <p className="jp-label">（環境設定メニュー）</p>
-                <h3>APP PREFERENCES</h3>
-                <p>Nudges, posture sensitivity, timers & potato laptop mode.</p>
-              </div>
-              <button
-                type="button"
-                className="pill-coral"
-                onClick={() => setSettingsOpen(true)}
-              >
-                open settings menu <ArrowRight size={15} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ======================================================== */}
-      {/* POPUP MODAL: SETTINGS & PREFERENCES                      */}
+      {/* POPUP MODAL: SETTINGS & EDIT PROFILE                     */}
       {/* ======================================================== */}
       {settingsOpen && (
         <div
@@ -305,8 +236,12 @@ export default function ProfilePage({ user, onUpdateUser, onLogout, onBackToStud
             {/* Modal Header */}
             <div className="pf-modal__head">
               <div>
-                <p className="jp-label">（環境設定メニュー）</p>
-                <h2 className="display" style={{ fontSize: '26px' }}>SETTINGS</h2>
+                <p className="jp-label">
+                  {modalTab === 'profile' ? '（プロフィール編集）' : '（環境設定メニュー）'}
+                </p>
+                <h2 className="display" style={{ fontSize: '24px' }}>
+                  {modalTab === 'profile' ? 'EDIT PROFILE' : 'SETTINGS'}
+                </h2>
               </div>
               <button
                 type="button"
@@ -318,102 +253,183 @@ export default function ProfilePage({ user, onUpdateUser, onLogout, onBackToStud
               </button>
             </div>
 
-            {/* Modal Content: Preferences rows */}
+            {/* Modal Tab Switcher */}
+            <div className="pf-modal__tabs">
+              <button
+                type="button"
+                className={`pf-modal__tab ${modalTab === 'profile' ? 'is-active' : ''}`}
+                onClick={() => setModalTab('profile')}
+              >
+                <User size={14} /> Profile （プロフ）
+              </button>
+              <button
+                type="button"
+                className={`pf-modal__tab ${modalTab === 'preferences' ? 'is-active' : ''}`}
+                onClick={() => setModalTab('preferences')}
+              >
+                <Sliders size={14} /> Preferences （設定）
+              </button>
+            </div>
+
+            {/* Modal Content */}
             <div className="pf-modal__body">
-              <div className="pf-rows">
-                <div className="pf-row">
-                  <span className="pf-row__label">Sound nudge</span>
-                  <Seg
-                    value={sound}
-                    options={[[true, 'On'], [false, 'Off']]}
-                    onChange={(v) => set('furai_pref_sound', v, setSound)}
-                  />
-                </div>
-                <div className="pf-row">
-                  <span className="pf-row__label">Sensitivity</span>
-                  <Seg
-                    value={sens}
-                    options={[['low', 'Low'], ['medium', 'Mid'], ['high', 'High']]}
-                    onChange={(v) => set('furai_pref_sens', v, setSens)}
-                  />
-                </div>
-                <div className="pf-row">
-                  <span className="pf-row__label">Focus sprint</span>
-                  <Seg
-                    value={focus}
-                    options={[['25', '25 min'], ['50', '50 min']]}
-                    onChange={(v) => set('furai_pref_focus', v, setFocus)}
-                  />
-                </div>
-                <div className="pf-row">
-                  <span className="pf-row__label">Stretch break</span>
-                  <Seg
-                    value={brk}
-                    options={[['5', '5 min'], ['10', '10 min']]}
-                    onChange={(v) => set('furai_pref_break', v, setBrk)}
-                  />
-                </div>
-                <div className="pf-row">
-                  <span className="pf-row__label">
-                    Potato mode <small>15 fps</small>
-                  </span>
-                  <Seg
-                    value={potato}
-                    options={[[true, 'On'], [false, 'Off']]}
-                    onChange={(v) => set('furai_pref_potato', v, setPotato)}
-                  />
-                </div>
-              </div>
+              {modalTab === 'profile' ? (
+                /* TAB 1: Edit Profile Form */
+                <form className="pf-modal__profile-form" onSubmit={save}>
+                  <div className="pf-rows">
+                    <label className="pf-row">
+                      <span className="pf-row__label">Name</span>
+                      <input
+                        className="pf-input"
+                        value={form.name}
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        required
+                        placeholder="Your full name"
+                      />
+                    </label>
+                    <label className="pf-row">
+                      <span className="pf-row__label">Email</span>
+                      <input
+                        type="email"
+                        className="pf-input"
+                        value={form.email}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        required
+                        placeholder="you@campus.edu"
+                      />
+                    </label>
+                    <label className="pf-row">
+                      <span className="pf-row__label">Studying</span>
+                      <input
+                        className="pf-input"
+                        value={form.major}
+                        onChange={(e) => setForm({ ...form, major: e.target.value })}
+                        placeholder="e.g. Computer Science"
+                      />
+                    </label>
+                    <div className="pf-row">
+                      <span className="pf-row__label">Style</span>
+                      <Seg
+                        value={form.archetypeId}
+                        options={ARCHETYPES.map((a) => [a.id, a.jp])}
+                        onChange={(v) => setForm({ ...form, archetypeId: v })}
+                      />
+                    </div>
+                  </div>
 
-              {/* Data Reset (SRS FR-24) */}
-              <div className="pf-modal__subrow">
-                <div className="pf-modal__subrow-info">
-                  <strong>Reset session telemetry</strong>
-                  <p>Clear temporary sprint logs and history.</p>
-                </div>
-                <button
-                  type="button"
-                  className="pf-btn-sub"
-                  onClick={handleResetData}
-                >
-                  <RotateCcw size={13} />
-                  <span>{resetDone ? 'Reset done!' : 'Reset data'}</span>
-                </button>
-              </div>
-
-              {/* Logout Area */}
-              <div className="pf-modal__logout">
-                {confirmLogout ? (
-                  <div className="pf-logout-confirm">
-                    <span>Leaving this workstation?</span>
-                    <button
-                      type="button"
-                      className="pill-coral"
-                      onClick={() => {
-                        setSettingsOpen(false);
-                        onLogout?.();
-                      }}
-                    >
-                      <LogOut size={14} /> yes, log out
-                    </button>
-                    <button
-                      type="button"
-                      className="pf-link"
-                      onClick={() => setConfirmLogout(false)}
-                    >
-                      stay
+                  <div className="pf-modal__action-row">
+                    <button type="submit" className="pill pill--dark pf-modal-save">
+                      {saved ? (
+                        <>
+                          <Check size={15} /> Changes saved!
+                        </>
+                      ) : (
+                        <>
+                          Save changes <ArrowRight size={15} />
+                        </>
+                      )}
                     </button>
                   </div>
-                ) : (
-                  <button
-                    type="button"
-                    className="pf-link"
-                    onClick={() => setConfirmLogout(true)}
-                  >
-                    Log out of Furai （ログアウト） →
-                  </button>
-                )}
-              </div>
+                </form>
+              ) : (
+                /* TAB 2: App Preferences & Telemetry */
+                <>
+                  <div className="pf-rows">
+                    <div className="pf-row">
+                      <span className="pf-row__label">Sound nudge</span>
+                      <Seg
+                        value={sound}
+                        options={[[true, 'On'], [false, 'Off']]}
+                        onChange={(v) => set('furai_pref_sound', v, setSound)}
+                      />
+                    </div>
+                    <div className="pf-row">
+                      <span className="pf-row__label">Sensitivity</span>
+                      <Seg
+                        value={sens}
+                        options={[['low', 'Low'], ['medium', 'Mid'], ['high', 'High']]}
+                        onChange={(v) => set('furai_pref_sens', v, setSens)}
+                      />
+                    </div>
+                    <div className="pf-row">
+                      <span className="pf-row__label">Focus sprint</span>
+                      <Seg
+                        value={focus}
+                        options={[['25', '25 min'], ['50', '50 min']]}
+                        onChange={(v) => set('furai_pref_focus', v, setFocus)}
+                      />
+                    </div>
+                    <div className="pf-row">
+                      <span className="pf-row__label">Stretch break</span>
+                      <Seg
+                        value={brk}
+                        options={[['5', '5 min'], ['10', '10 min']]}
+                        onChange={(v) => set('furai_pref_break', v, setBrk)}
+                      />
+                    </div>
+                    <div className="pf-row">
+                      <span className="pf-row__label">
+                        Potato mode <small>15 fps</small>
+                      </span>
+                      <Seg
+                        value={potato}
+                        options={[[true, 'On'], [false, 'Off']]}
+                        onChange={(v) => set('furai_pref_potato', v, setPotato)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Data Reset (SRS FR-24) */}
+                  <div className="pf-modal__subrow">
+                    <div className="pf-modal__subrow-info">
+                      <strong>Reset session telemetry</strong>
+                      <p>Clear temporary sprint logs and history.</p>
+                    </div>
+                    <button
+                      type="button"
+                      className="pf-btn-sub"
+                      onClick={handleResetData}
+                    >
+                      <RotateCcw size={13} />
+                      <span>{resetDone ? 'Reset done!' : 'Reset data'}</span>
+                    </button>
+                  </div>
+
+                  {/* Logout Area */}
+                  <div className="pf-modal__logout">
+                    {confirmLogout ? (
+                      <div className="pf-logout-confirm">
+                        <span>Leaving this workstation?</span>
+                        <button
+                          type="button"
+                          className="pill-coral"
+                          onClick={() => {
+                            setSettingsOpen(false);
+                            onLogout?.();
+                          }}
+                        >
+                          <LogOut size={14} /> yes, log out
+                        </button>
+                        <button
+                          type="button"
+                          className="pf-link"
+                          onClick={() => setConfirmLogout(false)}
+                        >
+                          stay
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="pf-link"
+                        onClick={() => setConfirmLogout(true)}
+                      >
+                        Log out of Furai （ログアウト） →
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
