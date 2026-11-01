@@ -320,7 +320,7 @@ export default function App() {
       )}
 
       {view === 'about' && (
-        <AboutPage onOpenDemo={openDemo} />
+        <AboutPage onOpenDemo={openDemo} onNavigate={openPage} />
       )}
 
       {view === 'study' && (
