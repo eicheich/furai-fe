@@ -16,16 +16,16 @@ export default function AboutPage({ onOpenDemo, onNavigate }) {
   return (
     <div className="about-view">
       {/* ---------------------------------------------------- */}
-      {/* HERO SECTION: Pengenalan Singkat Furai               */}
+      {/* HERO SECTION: Introducing Furai                      */}
       {/* ---------------------------------------------------- */}
       <section className="about-hero">
         <div className="about-hero__inner">
           <p className="jp-label jp-label--light">（フライについて）</p>
           <h1 className="about-hero__title">
-            KENALAN DENGAN FURAI.
+            MEET FURAI.
           </h1>
           <p className="about-hero__sub">
-            Teman belajar cerdas yang membantumu menjaga postur tubuh tetap tegak dan fokus dengan metode Pomodoro — langsung di browser tanpa alat tambahan.
+            An intelligent study companion engineered to keep your spine upright and your focus sharp with Pomodoro sprints — right in your browser without extra hardware.
           </p>
 
           <div className="about-hero__actions">
@@ -34,7 +34,7 @@ export default function AboutPage({ onOpenDemo, onNavigate }) {
               className="pill pill--yellow pill--lg"
               onClick={() => onNavigate?.('study')}
             >
-              <span>Mulai Belajar Sekarang</span>
+              <span>Launch Study Space</span>
               <ArrowRight size={18} />
             </button>
             <button
@@ -44,7 +44,7 @@ export default function AboutPage({ onOpenDemo, onNavigate }) {
               onClick={onOpenDemo}
             >
               <Play size={16} />
-              <span>Coba Demo Interaktif</span>
+              <span>Try Interactive Demo</span>
             </button>
           </div>
         </div>
@@ -54,7 +54,7 @@ export default function AboutPage({ onOpenDemo, onNavigate }) {
       {/* MAIN CONTENT                                         */}
       {/* ---------------------------------------------------- */}
       <main className="about-content">
-        {/* KISAH & MASALAH: Fenomena "Ebi Furai" */}
+        {/* ORIGIN STORY: The "Ebi Furai" Phenomenon */}
         <section className="about-section">
           <div className="card-staz card-staz--story">
             <span className="doodle-plus" style={{ top: 24, left: '16%' }}>+</span>
@@ -63,38 +63,38 @@ export default function AboutPage({ onOpenDemo, onNavigate }) {
             <div className="card-staz__head">
               <div>
                 <p className="jp-label">（誕生のきっかけ）</p>
-                <h2 className="display">KENAPA FURAI DIBUAT?</h2>
+                <h2 className="display">WHY FURAI WAS CREATED</h2>
               </div>
               <span className="story-chip" style={{ background: 'var(--yellow)' }}>
-                LATAR BELAKANG
+                ORIGIN & MISSION
               </span>
             </div>
 
             <div className="story-grid">
               <div className="story-body" style={{ maxWidth: '100%' }}>
                 <p className="lead-text">
-                  Pernahkah kamu melihat pantulan dirimu di layar laptop saat belajar larut malam?
+                  Have you ever caught your reflection on a black laptop screen during a late-night study sprint?
                 </p>
                 <p className="body">
-                  Leher condong belasan sentimeter ke depan, bahu terlipat ke dalam, dan punggung melengkung tajam.
-                  Dalam analogi kuliner Jepang: <strong>kamu telah berubah bentuk menjadi <em>Ebi Furai</em> (udang goreng yang melengkung)</strong>.
+                  Your chin is jutting 12 cm forward, your shoulders are curled inward, and your spine is contorted like a stressed crustacean.
+                  In Japanese culinary terms: <strong>you have achieved full <em>Ebi Furai</em> (fried shrimp) morphology.</strong>
                 </p>
                 <p className="body">
-                  Kebiasaan bungkuk berjam-jam saat belajar atau coding sering kali menyebabkan pegal leher kronis (*tech neck*), sakit punggung bawah, dan penurunan fokus. Kebanyakan orang tidak sadar mereka sedang bungkuk sampai rasa sakitnya muncul.
+                  Hours of slumping over a laptop trigger chronic tech neck, lower lumbar strain, and mental fatigue. Most students and developers don't even realize they're curling up until the stiffness and soreness set in.
                 </p>
                 <p className="body">
-                  <strong>Furai hadir sebagai solusi ramah</strong>: web app yang berfungsi sebagai pengawas postur pribadi yang tenang dan suportif. Tanpa harness mahal, tanpa sensor kabel, dan tanpa menghakimi.
+                  <strong>Furai was created as a supportive, calm companion</strong>: an on-device posture guardian that watches your alignment with empathy. No expensive harnesses, no wearable straps, and no judgment.
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 3 FITUR UTAMA WEB INI */}
+        {/* 3 CORE FEATURES */}
         <section className="about-section">
           <div className="section-head">
-            <p className="eyebrow">FITUR UTAMA APLIKASI</p>
-            <h2 className="display">APA SAJA YANG ADA DI FURAI?</h2>
+            <p className="eyebrow">WHAT'S PACKED INSIDE FURAI</p>
+            <h2 className="display">THREE CORE PILLARS</h2>
             <p className="section-head__jp">（3つのコア機能）</p>
           </div>
 
@@ -105,11 +105,11 @@ export default function AboutPage({ onOpenDemo, onNavigate }) {
                 <Eye size={24} />
               </div>
               <div className="about-feat-head">
-                <span className="about-feat-step">FITUR 01</span>
-                <h3>Deteksi Postur Realtime</h3>
+                <span className="about-feat-step">FEATURE 01</span>
+                <h3>Real-Time Posture Radar</h3>
               </div>
               <p>
-                Furai menggunakan kamera laptopmu untuk memantau titik telinga dan bahu secara realtime. Saat kamu mulai melengkung atau maju terlalu dekat ke layar, Furai akan memberi tahu dengan ramah.
+                Furai uses your laptop camera to track ear and shoulder alignment in real time. The moment you curl into a shrimp or lean too close to the screen, Furai gently lets you know.
               </p>
             </div>
 
@@ -119,11 +119,11 @@ export default function AboutPage({ onOpenDemo, onNavigate }) {
                 <Clock size={24} />
               </div>
               <div className="about-feat-head">
-                <span className="about-feat-step">FITUR 02</span>
-                <h3>Pomodoro Timer Terpadu</h3>
+                <span className="about-feat-step">FEATURE 02</span>
+                <h3>Integrated Pomodoro Timer</h3>
               </div>
               <p>
-                Atur ritme belajarmu dengan sprint fokus 25 menit dan jeda istirahat 5 menit. Timer akan otomatis menjeda jika kamu meninggalkan kursi atau tidak terlihat di depan kamera.
+                Structure your sessions with 25-minute deep focus intervals and 5-minute stretch breaks. The timer auto-pauses whenever you step away from the desk or camera frame.
               </p>
             </div>
 
@@ -133,99 +133,99 @@ export default function AboutPage({ onOpenDemo, onNavigate }) {
                 <Sparkles size={24} />
               </div>
               <div className="about-feat-head">
-                <span className="about-feat-step">FITUR 03</span>
-                <h3>Kalibrasi Adaptif 5 Detik</h3>
+                <span className="about-feat-step">FEATURE 03</span>
+                <h3>Adaptive 5-Second Calibration</h3>
               </div>
               <p>
-                Setiap orang punya postur alami dan tinggi meja yang berbeda. Hanya dengan duduk tegak selama 5 detik di awal sesi, Furai menyesuaikan standar tegak yang pas dengan tubuhmu.
+                Every body and workstation is unique. Sit upright for just 5 seconds, and Furai tailors the baseline to your natural ergonomics rather than a rigid formula.
               </p>
             </div>
           </div>
         </section>
 
-        {/* BAGAIMANA CARA KERJANYA */}
+        {/* HOW IT WORKS */}
         <section className="about-section">
           <div className="card-staz card-staz--how">
             <div className="section-head" style={{ marginBottom: '28px' }}>
-              <p className="eyebrow">LANGKAH SEDERHANA</p>
-              <h2 className="display">CARA PAKAI FURAI</h2>
+              <p className="eyebrow">EFFORTLESS ONBOARDING</p>
+              <h2 className="display">HOW TO USE FURAI</h2>
               <p className="section-head__jp">（かんたん3ステップ）</p>
             </div>
 
             <div className="about-steps-row">
               <div className="about-step-col">
                 <div className="about-step-num">1</div>
-                <h4>Buka Ruang Belajar</h4>
-                <p>Klik tombol <em>Study Space</em> dan izinkan akses webcam di browsermu.</p>
+                <h4>Open Study Space</h4>
+                <p>Launch the study room and grant browser camera permission. Everything stays in memory.</p>
               </div>
 
               <div className="about-step-divider">→</div>
 
               <div className="about-step-col">
                 <div className="about-step-num">2</div>
-                <h4>Kalibrasi 5 Detik</h4>
-                <p>Duduk tegak dan nyaman selama 5 detik agar Furai mencatat postur acuanmu.</p>
+                <h4>5-Second Baseline</h4>
+                <p>Sit comfortably tall for 5 seconds so Furai captures your natural upright reference angle.</p>
               </div>
 
               <div className="about-step-divider">→</div>
 
               <div className="about-step-col">
                 <div className="about-step-num">3</div>
-                <h4>Fokus Belajar</h4>
-                <p>Mulai timer Pomodoro. Furai akan memberikan pengingat lembut jika kamu mulai bungkuk.</p>
+                <h4>Focus & Study</h4>
+                <p>Start your Pomodoro sprint. Furai provides supportive, gentle nudges if you begin to slouch.</p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* PRINSIP PRIVASI: ZERO SURVEILLANCE */}
+        {/* PRIVACY GUARANTEE: ZERO SURVEILLANCE */}
         <section className="about-section">
           <div className="card-staz card-staz--creed">
             <div className="creed-head">
               <p className="jp-label">（プライバシーの約束）</p>
-              <h2 className="display">PRIVASIMU 100% AMAN</h2>
+              <h2 className="display">100% PRIVATE & ON-DEVICE</h2>
               <p className="creed-sub">
-                Kami tidak pernah merekam atau menyimpan video dari webcame-mu:
+                We never record, save, or upload webcam video footage:
               </p>
             </div>
 
             <div className="creed-grid">
               <div className="creed-card">
                 <span className="creed-num"><ShieldCheck size={26} color="var(--mint)" /></span>
-                <h3 className="creed-title">Diproses Lokal di Browser</h3>
+                <h3 className="creed-title">Processed Locally in Browser</h3>
                 <p className="creed-desc">
-                  Seluruh pemindaian postur dijalankan langsung di perangkatmu (on-device). Tidak ada gambar atau video yang dikirim ke server mana pun.
+                  All skeletal landmark calculations run on-device. Zero video frames or images are ever uploaded or transmitted across the internet.
                 </p>
               </div>
 
               <div className="creed-card">
                 <span className="creed-num"><Heart size={26} color="var(--coral)" /></span>
-                <h3 className="creed-title">Teguran yang Menenangkan</h3>
+                <h3 className="creed-title">Calm, Supportive Nudges</h3>
                 <p className="creed-desc">
-                  Bukan alarm sirene yang bikin panik. Furai memberikan nada lembut dan pengingat visual kecil agar konsentrasimu tidak buyar.
+                  No jarring alarms or stressful sirens. Furai delivers soft acoustic chimes and minimal visual cues so your focus remains unbroken.
                 </p>
               </div>
 
               <div className="creed-card">
                 <span className="creed-num"><Zap size={26} color="var(--yellow)" /></span>
-                <h3 className="creed-title">Ringan di Semua Laptop</h3>
+                <h3 className="creed-title">Potato-Laptop Friendly</h3>
                 <p className="creed-desc">
-                  Dirancang hemat baterai dan ringan sumber daya, sehingga tetap lancar digunakan bahkan di laptop spesifikasi sederhana.
+                  Engineered to be battery-conscious and lightweight, running smoothly at 30 FPS even on modest, older student laptops.
                 </p>
               </div>
             </div>
 
             <div className="creed-cta">
               <div className="creed-cta__text">
-                <h3>Sudah siap belajar dengan punggung tegak?</h3>
-                <p>Masuk ke ruang belajar Furai dan rasakan perbedaannya hari ini.</p>
+                <h3>Ready to un-shrimp your spine?</h3>
+                <p>Step into your Furai study space and feel the difference today.</p>
               </div>
               <button
                 type="button"
                 className="pill pill--dark pill--lg"
                 onClick={() => onNavigate?.('study')}
               >
-                <span>Masuk ke Study Space</span>
+                <span>Launch Study Space</span>
                 <ArrowRight size={18} />
               </button>
             </div>
