@@ -230,10 +230,11 @@ export default function App() {
   const [demoOpen, setDemoOpen] = useState(false);
   const [view, setView] = useState(() => {
     const hash = window.location.hash.replace('#', '');
+    const currentUser = JSON.parse(localStorage.getItem('furai_user') || 'null');
     if (hash === 'login' || hash === 'register') return hash;
     if (hash === 'about-page' || hash === 'story') return 'about';
-    if (hash === 'study' || hash === 'session') return 'study';
-    if (hash === 'profile' || hash === 'settings') return 'profile';
+    if (hash === 'study' || hash === 'session') return currentUser ? 'study' : 'login';
+    if (hash === 'profile' || hash === 'settings') return currentUser ? 'profile' : 'login';
     return 'landing';
   });
   const [user, setUser] = useState(null);
@@ -265,14 +266,26 @@ export default function App() {
 
     const onHashChange = () => {
       const hash = window.location.hash.replace('#', '');
+      const currentUser = JSON.parse(localStorage.getItem('furai_user') || 'null');
+
       if (hash === 'login' || hash === 'register') {
         setView(hash);
       } else if (hash === 'about-page' || hash === 'story') {
         setView('about');
       } else if (hash === 'study' || hash === 'session') {
-        setView('study');
+        if (!currentUser) {
+          setView('login');
+          window.location.hash = 'login';
+        } else {
+          setView('study');
+        }
       } else if (hash === 'profile' || hash === 'settings') {
-        setView('profile');
+        if (!currentUser) {
+          setView('login');
+          window.location.hash = 'login';
+        } else {
+          setView('profile');
+        }
       } else if (
         hash === 'top' ||
         hash === '' ||
@@ -290,10 +303,22 @@ export default function App() {
   }, []);
 
   const openDemo = () => {
-    openPage('study');
+    if (!user) {
+      openPage('login');
+    } else {
+      openPage('study');
+    }
   };
 
   const openPage = (mode, sectionId) => {
+    // Auth Guard: Fitur Study Space & Profile wajib login terlebih dahulu
+    if ((mode === 'study' || mode === 'profile') && !user) {
+      setView('login');
+      window.location.hash = 'login';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     setView(mode);
     if (mode === 'landing') {
       window.location.hash = sectionId || 'top';

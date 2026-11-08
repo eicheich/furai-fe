@@ -111,24 +111,17 @@ export default function Navbar({
             <>
               <button
                 type="button"
-                className={currentView === 'login' ? 'nav__active-link' : ''}
+                className={`nav__link-btn ${currentView === 'login' ? 'nav__active-link' : ''}`}
                 onClick={() => onNavigate?.('login')}
               >
                 Log in
               </button>
               <button
                 type="button"
-                className={`pill pill--light ${currentView === 'register' ? 'is-active' : ''}`}
+                className="pill pill--yellow"
                 onClick={() => onNavigate?.('register')}
               >
                 Sign up
-              </button>
-              <button
-                type="button"
-                className="pill pill--yellow"
-                onClick={onOpenDemo}
-              >
-                Try it now
               </button>
             </>
           )}
