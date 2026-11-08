@@ -279,3 +279,4 @@ export function ensureMediaPipeLoaded() {
     document.head.appendChild(script1);
   });
 }
+

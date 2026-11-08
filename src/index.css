@@ -2542,51 +2542,50 @@ a {
   letter-spacing: 0.08em;
 }
 
-.study-tabs {
+.study-topbar__actions {
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(0, 0, 0, 0.22);
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
-  border-radius: 999px;
-  padding: 4px;
+  gap: 12px;
 }
 
-.study-tab {
+.study-calib-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
   border-radius: 999px;
+  padding: 6px 14px;
   font-family: var(--f-round);
   font-weight: 700;
   font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.85);
-  background: transparent;
+  color: #fff;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.study-tab small {
+.study-calib-pill:hover {
+  background: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
+}
+
+.study-calib-pill.is-calibrated {
+  background: var(--mint);
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.study-calib-key {
   font-family: var(--f-mono);
   font-size: 10px;
-  opacity: 0.75;
+  font-weight: 800;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 1px 6px;
+  border-radius: 4px;
 }
 
-.study-tab:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.study-tab.is-active {
-  background: #fff;
-  color: var(--ink);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
-}
-
-.study-tab.is-active small {
-  color: var(--muted);
-  opacity: 1;
+.study-calib-pill.is-calibrated .study-calib-key {
+  background: rgba(0, 0, 0, 0.12);
 }
 
 .study-user-chip {
@@ -2927,94 +2926,59 @@ a {
   color: var(--ink);
 }
 
-/* Viewfinder Bottom Controls */
-.vf-bottom-bar {
+/* Clean Viewfinder Footer */
+.vf-clean-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   flex-wrap: wrap;
-  padding-top: 12px;
+  padding-top: 14px;
   border-top: 1.5px solid var(--line);
 }
 
-.vf-sim-group {
-  display: flex;
+.vf-privacy-note {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-}
-
-.vf-meta-label {
+  gap: 6px;
   font-family: var(--f-mono);
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 500;
   color: var(--muted);
-  letter-spacing: 0.05em;
 }
 
-.vf-btn-cluster {
-  display: flex;
-  gap: 6px;
-}
-
-.vf-btn {
-  font-family: var(--f-mono);
-  font-size: 11px;
-  font-weight: 700;
-  background: #ffffff;
-  border: 1.5px solid var(--ink);
-  border-radius: 999px;
-  padding: 4px 10px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.vf-btn:hover {
-  background: var(--paper);
-}
-
-.vf-btn.is-selected {
-  background: var(--ink);
-  color: #fff;
-}
-
-.vf-settings-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.vf-setting-btn {
-  font-family: var(--f-mono);
-  font-size: 11px;
-  font-weight: 700;
-  background: var(--paper);
-  border: 1.5px solid var(--ink);
-  border-radius: 999px;
-  padding: 4px 10px;
-  cursor: pointer;
-}
-
-.vf-setting-btn.is-active {
-  background: var(--yellow);
-}
-
-.vf-sens-select {
-  display: flex;
+.vf-recalib-link {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
+  background: transparent;
+  border: none;
   font-family: var(--f-mono);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--cobalt);
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.15s ease;
 }
 
-.vf-select {
+.vf-recalib-link:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+}
+
+.vf-camera-off-msg {
+  position: absolute;
+  text-align: center;
+  bottom: 24px;
+}
+
+.vf-camera-off-msg p {
   font-family: var(--f-mono);
-  font-size: 11px;
-  border: 1.5px solid var(--ink);
-  border-radius: 6px;
-  padding: 2px 6px;
-  background: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 0;
 }
 
 /* Right Column: Pomodoro STAZ Card */
@@ -3116,171 +3080,344 @@ a {
   padding: 12px 20px;
 }
 
-/* Virtual Plant Card */
-.card-staz--plant {
-  padding: 18px 22px;
-  background-color: var(--cream);
+/* Essential Session Stats Card (Clean Telemetry) */
+.card-staz--telemetry-clean {
+  padding: 22px 24px;
 }
 
-.plant-grid {
-  display: flex;
-  align-items: center;
-  gap: 18px;
+.tele-clean-head {
+  margin-bottom: 16px;
 }
 
-.plant-icon-box {
-  width: 60px;
-  height: 60px;
-  border-radius: 16px;
-  background: #ffffff;
-  border: 2px solid var(--ink);
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-
-.plant-emoji {
-  font-size: 30px;
-}
-
-.plant-info {
-  flex: 1;
-}
-
-.plant-info__top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2px;
-}
-
-.plant-level-badge {
-  font-family: var(--f-mono);
-  font-size: 10.5px;
-  font-weight: 700;
-  background: var(--yellow);
-  border: 1px solid var(--ink);
-  padding: 1px 6px;
-  border-radius: 4px;
-}
-
-.plant-title {
+.tele-clean-title {
   font-family: var(--f-round);
   font-weight: 800;
-  font-size: 16px;
+  font-size: 18px;
+  color: var(--ink);
+  margin: 2px 0 0;
+}
+
+.tele-clean-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.tele-clean-item {
+  background: #ffffff;
+  border: 1.5px solid var(--ink);
+  border-radius: 14px;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.tele-clean-label {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.tele-clean-val {
+  font-family: var(--f-display);
+  font-size: 26px;
+  line-height: 1.1;
   color: var(--ink);
 }
 
-.plant-sub {
-  font-size: 11.5px;
-  color: var(--muted);
-  margin-bottom: 8px;
+.tele-clean-val--mint {
+  color: #116843;
 }
 
-.plant-meter-bar {
-  width: 100%;
+.tele-clean-val--coral {
+  color: #c93e1b;
+}
+
+.tele-clean-sub {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.tele-clean-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1.5px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.tele-baseline-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  color: var(--ink);
+}
+
+.status-dot {
+  width: 8px;
   height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--ink);
+}
+
+.status-dot.is-ok {
+  background: var(--mint);
+}
+
+.status-dot.is-warn {
+  background: var(--yellow);
+}
+
+.tele-calib-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  font-weight: 700;
   background: #ffffff;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tele-calib-btn:hover {
+  background: var(--paper);
+  transform: translateY(-1px);
+}
+
+/* ---------------------------------------------------- */
+/* Initial Calibration Modal                            */
+/* ---------------------------------------------------- */
+.calib-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(17, 24, 74, 0.72);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: pf-fade-in 0.2s ease-out;
+}
+
+.calib-modal {
+  width: 100%;
+  max-width: 540px;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 24px 24px;
+  border: 2.5px solid var(--ink);
+  border-radius: 28px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+  animation: pf-modal-pop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.calib-modal__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 22px 26px 14px;
+  background: #ffffff;
+  border-bottom: 2px solid var(--ink);
+}
+
+.calib-modal__title {
+  font-family: var(--f-round);
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--ink);
+  margin: 2px 0 0;
+}
+
+.calib-modal__close {
+  background: transparent;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--ink);
+  transition: all 0.15s ease;
+}
+
+.calib-modal__close:hover {
+  background: var(--paper);
+  transform: scale(1.05);
+}
+
+.calib-modal__body {
+  padding: 24px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.calib-modal__lead {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink);
+  margin: 0;
+}
+
+.calib-modal__stage {
+  background: #ffffff;
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+  padding: 24px 20px;
+  text-align: center;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.08);
+}
+
+/* Running state */
+.calib-running-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.calib-ring {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 4px solid var(--yellow);
+  background: var(--cream);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(255, 214, 0, 0.35);
+}
+
+.calib-ring-number {
+  font-family: var(--f-display);
+  font-size: 32px;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.calib-ring-sub {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.calib-progress-track {
+  width: 100%;
+  max-width: 280px;
+  height: 10px;
+  background: var(--paper);
   border: 1.5px solid var(--ink);
   border-radius: 999px;
   overflow: hidden;
 }
 
-.plant-meter-fill {
+.calib-progress-fill {
   height: 100%;
-  transition: width 0.3s ease;
+  background: var(--mint);
+  transition: width 0.15s ease-out;
 }
 
-.plant-meter-labels {
-  display: flex;
-  justify-content: space-between;
+.calib-running-hint {
   font-family: var(--f-mono);
-  font-size: 10.5px;
-  font-weight: 700;
+  font-size: 12px;
   color: var(--muted);
-  margin-top: 4px;
+  margin: 0;
 }
 
-/* Telemetry Card */
-.card-staz--telemetry {
-  padding: 20px 22px;
-}
-
-.telemetry-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  border-bottom: 1.5px solid var(--line);
-  padding-bottom: 16px;
-  margin-bottom: 14px;
-}
-
-.tele-item {
+/* Success state */
+.calib-success-box {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-}
-
-.tele-label {
-  font-family: var(--f-mono);
-  font-size: 9.5px;
-  font-weight: 700;
-  color: var(--muted);
-}
-
-.tele-val {
-  font-family: var(--f-display);
-  font-size: 17px;
-  color: var(--ink);
-}
-
-.tele-val--mint {
-  color: #116843;
-}
-
-.tele-val--coral {
-  color: #c93e1b;
-}
-
-.tele-val--ok {
-  font-size: 12px;
-  font-family: var(--f-mono);
-  font-weight: 700;
-  color: var(--ink);
-}
-
-.tele-timeline-head {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-family: var(--f-mono);
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--muted);
-  margin-bottom: 8px;
+  gap: 8px;
 }
 
-.tele-timeline-bars {
-  display: flex;
-  gap: 4px;
-  height: 14px;
-  background: #ffffff;
-  border: 1.5px solid var(--ink);
-  border-radius: 6px;
-  padding: 2px;
-}
-
-.tele-bar {
-  flex: 1;
-  border-radius: 2px;
-}
-
-.tele-bar.is-green {
+.calib-success-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
   background: var(--mint);
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+  margin-bottom: 4px;
 }
 
-.tele-bar.is-coral {
-  background: var(--shrimp);
+.calib-success-box h4 {
+  font-family: var(--f-round);
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--ink);
+  margin: 0;
+}
+
+.calib-success-box p {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Ready Tips state */
+.calib-tips-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+.calib-tip-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+  color: var(--ink);
+}
+
+.calib-tip-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--yellow);
+  border: 1.5px solid var(--ink);
+  font-family: var(--f-display);
+  font-size: 11px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.calib-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calib-action-start {
+  width: 100%;
+  justify-content: center;
 }
 
 /* Calibration Tab Stage */
