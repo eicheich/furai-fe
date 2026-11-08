@@ -20,6 +20,7 @@ import {
   CalibratedPostureDetector,
   ensureMediaPipeLoaded,
 } from '../utils/postureEngine';
+import { saveCalibrationToDb, saveStudySessionToDb } from '../utils/db';
 
 /* ------------------------------------------------------------------ */
 /* Web Audio API Synthesizer (Gentle sound cues)                      */
@@ -196,6 +197,23 @@ export default function StudyPage({ user, onBackToHome, onOpenProfile }) {
 
   const handleSprintComplete = () => {
     if (soundEnabled) playTone('success');
+
+    // Simpan rekapan sesi pomodoro ke Neon DB
+    if (user?.id) {
+      saveStudySessionToDb({
+        userId: user.id,
+        mode: pomodoroMode,
+        sprintNumber: sprintCount,
+        plannedDurationSec: pomodoroMode === 'focus' ? focusLength : breakLength,
+        actualDurationSec: (pomodoroMode === 'focus' ? focusLength : breakLength) - timeLeft,
+        status: 'completed',
+        uprightSeconds,
+        slouchSeconds: Math.max(0, totalDetectedSeconds - uprightSeconds),
+        uprightScore: postureScore,
+        slouchAlertCount,
+      }).catch((e) => console.warn('Neon save session error:', e));
+    }
+
     if (pomodoroMode === 'focus') {
       setPomodoroMode('break');
       setTimeLeft(breakLength);
@@ -250,6 +268,16 @@ export default function StudyPage({ user, onBackToHome, onOpenProfile }) {
             setCalibSuccessNotice(true);
             localStorage.setItem('furai_baseline_calibrated', 'true');
             if (soundEnabled) playTone('success');
+
+            // Simpan baseline kalibrasi ke Neon DB
+            if (user?.id && res.baseline) {
+              saveCalibrationToDb({
+                userId: user.id,
+                ratio: res.baseline.jarak_kepala_bahu,
+                widthRel: res.baseline.lebar_bahu_rel,
+                tilt: res.baseline.miring_bahu || 0,
+              }).catch((e) => console.warn('Neon save calibration error:', e));
+            }
 
             // Tutup modal otomatis setelah 1.5 detik
             setTimeout(() => {

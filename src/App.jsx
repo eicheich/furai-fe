@@ -7,6 +7,7 @@ import StudyPage from './components/StudyPage';
 import ProfilePage from './components/ProfilePage';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import { syncUserToDb } from './utils/db';
 
 /* ------------------------------------------------------------------ */
 /* Content                                                             */
@@ -240,7 +241,24 @@ export default function App() {
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('furai_user') || 'null');
-      if (saved && typeof saved === 'object') setUser(saved);
+      if (saved && typeof saved === 'object') {
+        setUser(saved);
+        // Sinkronisasi id user dari Neon DB
+        if (saved.email) {
+          syncUserToDb({
+            email: saved.email,
+            name: saved.name || 'Alex Ebi',
+            archetype: saved.archetypeId || 'coder',
+            archetypeJp: saved.archetypeJp || '自習',
+          }).then((dbUser) => {
+            if (dbUser?.id && (!saved.id || saved.id !== dbUser.id)) {
+              const updated = { ...saved, id: dbUser.id };
+              setUser(updated);
+              localStorage.setItem('furai_user', JSON.stringify(updated));
+            }
+          }).catch((e) => console.warn('Neon sync user startup:', e));
+        }
+      }
     } catch {
       localStorage.removeItem('furai_user');
     }

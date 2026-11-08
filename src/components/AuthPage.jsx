@@ -14,6 +14,7 @@ import {
   Coffee,
   Code
 } from 'lucide-react';
+import { syncUserToDb } from '../utils/db';
 
 const STUDY_ARCHETYPES = [
   {
@@ -91,6 +92,19 @@ export default function AuthPage({ initialMode = 'login', onBack, onSuccess }) {
       archetypeTitle: archetype.title,
       archetypeJp: archetype.jp,
     };
+
+    // Sinkronisasi akun ke Neon Database di background
+    syncUserToDb({
+      email: userPayload.email,
+      name: userPayload.name,
+      archetype: userPayload.archetypeId,
+      archetypeJp: userPayload.archetypeJp,
+    }).then((dbUser) => {
+      if (dbUser?.id) {
+        userPayload.id = dbUser.id;
+        localStorage.setItem('furai_user', JSON.stringify(userPayload));
+      }
+    }).catch((e) => console.warn('Neon sync warning:', e));
 
     localStorage.setItem('furai_user', JSON.stringify(userPayload));
     setSuccessMsg(

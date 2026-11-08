@@ -11,6 +11,7 @@
   "dependencies": {
     "@mediapipe/camera_utils": "^0.3.1675466862",
     "@mediapipe/pose": "^0.5.1675469404",
+    "@neondatabase/serverless": "^1.2.0",
     "lucide-react": "^1.16.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

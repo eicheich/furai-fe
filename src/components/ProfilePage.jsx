@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, Check, Sliders, X, RotateCcw, LogOut, User } from 'lucide-react';
+import { syncUserToDb, saveUserPreferencesToDb, getUserSummaryStatsFromDb } from '../utils/db';
 
 const ARCHETYPES = [
   { id: 'coder', title: 'Code & Debug', jp: '開発' },
@@ -47,6 +48,29 @@ export default function ProfilePage({ user, onUpdateUser, onLogout, onBackToStud
   const [brk, setBrk] = useState(pref('furai_pref_break', '5'));
   const [potato, setPotato] = useState(pref('furai_pref_potato', 'false') === 'true');
 
+  const [dbStats, setDbStats] = useState({
+    streakDays: 3,
+    avgScore: 94,
+    totalSprints: 14,
+    badges: 4,
+  });
+
+  // Muat statistik nyata dari Neon DB bila user terhubung
+  useEffect(() => {
+    if (user?.id) {
+      getUserSummaryStatsFromDb(user.id).then((st) => {
+        if (st) {
+          setDbStats({
+            streakDays: Math.max(1, Number(st.streak_days) || 1),
+            avgScore: Math.round(Number(st.avg_score)) || 94,
+            totalSprints: Number(st.total_sprints) || 0,
+            badges: 4,
+          });
+        }
+      }).catch((e) => console.warn('Neon stats load error:', e));
+    }
+  }, [user?.id]);
+
   useEffect(() => {
     if (user) {
       setForm({
@@ -61,6 +85,13 @@ export default function ProfilePage({ user, onUpdateUser, onLogout, onBackToStud
   const set = (key, val, setter) => {
     setter(val);
     localStorage.setItem(key, String(val));
+    if (user?.id) {
+      saveUserPreferencesToDb(user.id, {
+        soundEnabled: key === 'furai_pref_sound' ? val : sound,
+        sensitivity: key === 'furai_pref_sens' ? val : sens,
+        potatoMode: key === 'furai_pref_potato' ? val : potato,
+      }).catch((e) => console.warn('Neon save pref error:', e));
+    }
   };
 
   const initial = (form.name.trim().charAt(0) || 'U').toUpperCase();
@@ -93,6 +124,20 @@ export default function ProfilePage({ user, onUpdateUser, onLogout, onBackToStud
       archetypeTitle: arch.title,
       archetypeJp: arch.jp,
     };
+
+    // Sinkronisasi pembaruan profil ke Neon DB
+    syncUserToDb({
+      email: updated.email,
+      name: updated.name,
+      archetype: updated.archetypeId,
+      archetypeJp: updated.archetypeJp,
+    }).then((dbUser) => {
+      if (dbUser?.id && !updated.id) {
+        updated.id = dbUser.id;
+        localStorage.setItem('furai_user', JSON.stringify(updated));
+      }
+    }).catch((e) => console.warn('Neon sync user profile error:', e));
+
     localStorage.setItem('furai_user', JSON.stringify(updated));
     onUpdateUser?.(updated);
     setSaved(true);
@@ -184,15 +229,34 @@ export default function ProfilePage({ user, onUpdateUser, onLogout, onBackToStud
           </div>
 
           <div className="pf-stats">
-            {STATS.map((s) => (
-              <div className="pf-stat" key={s.no}>
-                <span className="pf-stat__no">{s.no}</span>
-                <span className="pf-stat__val">
-                  {s.val}
-                  <small>{s.unit}</small>
-                </span>
-              </div>
-            ))}
+            <div className="pf-stat">
+              <span className="pf-stat__no">STREAK</span>
+              <span className="pf-stat__val">
+                {dbStats.streakDays}
+                <small>days</small>
+              </span>
+            </div>
+            <div className="pf-stat">
+              <span className="pf-stat__no">AVG SCORE</span>
+              <span className="pf-stat__val">
+                {dbStats.avgScore}
+                <small>%</small>
+              </span>
+            </div>
+            <div className="pf-stat">
+              <span className="pf-stat__no">SPRINTS</span>
+              <span className="pf-stat__val">
+                {dbStats.totalSprints}
+                <small>done</small>
+              </span>
+            </div>
+            <div className="pf-stat">
+              <span className="pf-stat__no">BADGES</span>
+              <span className="pf-stat__val">
+                {dbStats.badges}
+                <small>/ 4</small>
+              </span>
+            </div>
           </div>
         </div>
       </section>
