@@ -464,7 +464,8 @@ export default function StudyPage({ user, onBackToHome, onOpenProfile }) {
               title="Kembali ke Beranda"
             >
               <ArrowLeft size={16} />
-              <span>Back to Home （ホーム）</span>
+              <span className="study-back-btn__label">Back to Home</span>
+              <span className="study-back-btn__jp">（ホーム）</span>
             </button>
 
             <div className="study-brand">
@@ -482,7 +483,12 @@ export default function StudyPage({ user, onBackToHome, onOpenProfile }) {
               title="Kalibrasi posisi duduk tegak (5 detik)"
             >
               <Sparkles size={14} />
-              <span>{baselineCalibrated ? 'Terkalibrasi (5s)' : 'Mulai Kalibrasi'}</span>
+              <span className="study-calib-text-full">
+                {baselineCalibrated ? 'Terkalibrasi (5s)' : 'Mulai Kalibrasi'}
+              </span>
+              <span className="study-calib-text-short">
+                {baselineCalibrated ? 'Terkalibrasi' : 'Kalibrasi'}
+              </span>
               <span className="study-calib-key">C</span>
             </button>
 

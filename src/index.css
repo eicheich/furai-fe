@@ -2509,6 +2509,14 @@ a {
   background: rgba(0, 0, 0, 0.12);
 }
 
+.study-calib-text-full {
+  display: inline;
+}
+
+.study-calib-text-short {
+  display: none;
+}
+
 .study-user-chip {
   display: inline-flex;
   align-items: center;
@@ -3719,9 +3727,25 @@ a {
   justify-content: flex-end;
 }
 
+@media (max-width: 1024px) {
+  .study-container {
+    margin: 20px auto 48px;
+    padding: 0 16px;
+  }
+
+  .study-grid {
+    gap: 20px;
+  }
+}
+
 @media (max-width: 960px) {
   .study-grid {
     grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .vf-stage {
+    max-height: 420px;
   }
 
   .stretches-grid {
@@ -3732,14 +3756,360 @@ a {
     grid-template-columns: 1fr 1fr;
   }
 
-  .telemetry-grid {
-    grid-template-columns: 1fr 1fr;
+  .tele-clean-grid {
+    gap: 12px;
   }
 
   .study-tabs {
     order: 3;
     width: 100%;
     justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .study-topbar__inner {
+    padding: 10px 16px;
+    gap: 10px;
+  }
+
+  .study-back-btn {
+    padding: 6px 12px;
+    font-size: 11.5px;
+  }
+
+  .study-back-btn__jp {
+    display: none;
+  }
+
+  .study-calib-key {
+    display: none;
+  }
+
+  .study-calib-pill {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .card-staz--viewfinder,
+  .card-staz--pomodoro,
+  .card-staz--telemetry-clean {
+    padding: 20px 18px;
+    border-radius: 20px;
+  }
+
+  .vf-stage {
+    max-height: 380px;
+    margin: 14px 0 12px;
+  }
+
+  .pomo-time-display {
+    font-size: clamp(48px, 12vw, 68px);
+  }
+
+  .pomodoro-timer-stage {
+    padding: 20px 12px;
+    margin: 14px 0;
+  }
+
+  .tele-clean-grid {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 580px) {
+  .study-container {
+    margin: 12px auto 36px;
+    padding: 0 12px;
+  }
+
+  .study-col {
+    gap: 16px;
+  }
+
+  .study-topbar__inner {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .study-topbar__left {
+    gap: 8px;
+  }
+
+  .study-back-btn {
+    padding: 5px 8px;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .study-brand__logo {
+    font-size: 17px;
+  }
+
+  .study-brand__jp {
+    display: none;
+  }
+
+  .study-topbar__actions {
+    gap: 6px;
+  }
+
+  .study-calib-pill {
+    padding: 5px 9px;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .study-calib-text-full {
+    display: none;
+  }
+
+  .study-calib-text-short {
+    display: inline;
+  }
+
+  .study-user-chip {
+    padding: 3px 6px;
+    gap: 4px;
+  }
+
+  .study-user-chip__jp {
+    display: none;
+  }
+
+  .study-user-chip__avatar {
+    width: 22px;
+    height: 22px;
+    font-size: 10px;
+  }
+
+  .card-staz--viewfinder,
+  .card-staz--pomodoro,
+  .card-staz--telemetry-clean {
+    padding: 16px 14px;
+    border-radius: 18px;
+  }
+
+  .card-staz__head {
+    margin-bottom: 12px;
+  }
+
+  .card-staz--viewfinder .display {
+    font-size: 20px !important;
+  }
+
+  .viewfinder-controls {
+    gap: 6px;
+  }
+
+  .vf-icon-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .vf-stage {
+    aspect-ratio: 4 / 3;
+    min-height: 200px;
+    max-height: 280px;
+    border-radius: 14px;
+    margin: 10px 0 12px;
+  }
+
+  .vf-badge-tag {
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    max-width: calc(100% - 20px);
+  }
+
+  .vf-badge {
+    font-size: 10.5px;
+    padding: 4px 10px;
+    white-space: nowrap;
+    max-width: 100%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+
+  .vf-clean-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding-top: 10px;
+  }
+
+  .vf-privacy-note {
+    font-size: 10px;
+  }
+
+  .vf-recalib-link {
+    font-size: 11px;
+  }
+
+  .pomodoro-header {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+  }
+
+  .pomodoro-mode-switch {
+    width: 100%;
+    order: 2;
+  }
+
+  .pomo-sprint-badge {
+    order: 1;
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+
+  .pomo-pill {
+    flex: 1;
+    justify-content: center;
+    padding: 6px 6px;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .pomodoro-timer-stage {
+    padding: 14px 8px;
+    border-radius: 14px;
+    margin: 10px 0;
+  }
+
+  .pomo-time-display {
+    font-size: clamp(42px, 16vw, 56px);
+  }
+
+  .pomo-status-sub {
+    font-size: 11.5px;
+    margin-top: 6px;
+    padding: 0 4px;
+  }
+
+  .pomodoro-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .pomo-play-btn {
+    width: 100%;
+    flex: 1 1 100%;
+    justify-content: center;
+    padding: 11px 16px;
+    font-size: 13.5px;
+  }
+
+  .pomodoro-actions .pill--ghost {
+    flex: 1 1 calc(50% - 4px);
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .tele-clean-head {
+    margin-bottom: 12px;
+  }
+
+  .tele-clean-title {
+    font-size: 16px;
+  }
+
+  .tele-clean-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .tele-clean-item:nth-child(3) {
+    grid-column: span 2;
+  }
+
+  .tele-clean-item {
+    padding: 10px 12px;
+    border-radius: 12px;
+    gap: 1px;
+  }
+
+  .tele-clean-val {
+    font-size: 22px;
+  }
+
+  .tele-clean-label {
+    font-size: 9px;
+  }
+
+  .tele-clean-sub {
+    font-size: 10px;
+  }
+
+  .tele-clean-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding-top: 10px;
+  }
+
+  .tele-calib-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 8px 12px;
+    font-size: 11.5px;
+  }
+
+  .nudge-toast {
+    width: calc(100% - 24px);
+    max-width: 380px;
+    top: 62px;
+  }
+
+  .nudge-toast__inner {
+    border-radius: 16px;
+    padding: 10px 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+  }
+
+  .nudge-toast__dismiss {
+    width: 100%;
+    text-align: center;
+    margin-top: 4px;
+    padding: 6px 12px;
+  }
+
+  .calib-modal {
+    border-radius: 20px;
+    max-height: 92vh;
+    margin: 12px;
+  }
+
+  .calib-modal__head {
+    padding: 14px 16px 10px;
+  }
+
+  .calib-modal__title {
+    font-size: 17px;
+  }
+
+  .calib-modal__body {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .calib-modal__stage {
+    padding: 10px;
+    min-height: auto;
+  }
+
+  .calib-camera-preview-wrap {
+    max-height: 180px;
+  }
+
+  .calib-modal__lead {
+    font-size: 12px;
+    line-height: 1.45;
   }
 }
 
