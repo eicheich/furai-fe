@@ -1934,6 +1934,58 @@ a {
   align-items: center;
 }
 
+.about-acronym-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--yellow);
+  color: var(--ink);
+  font-family: var(--f-mono);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 6px 18px;
+  border-radius: 999px;
+  border: 2px solid var(--ink);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25);
+  margin-bottom: 8px;
+}
+
+.about-acronym-banner {
+  background: #ffffff;
+  border: 2.5px solid var(--ink);
+  border-radius: 20px;
+  padding: 22px 26px;
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.08);
+}
+
+.about-acronym-tag {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--coral);
+  letter-spacing: 0.06em;
+}
+
+.about-acronym-banner h3 {
+  font-family: var(--f-round);
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--ink);
+  margin: 0;
+}
+
+.about-acronym-banner p {
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
 .about-hero__title {
   font-family: var(--f-display);
   font-size: clamp(38px, 5.8vw, 70px);

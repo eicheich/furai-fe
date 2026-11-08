@@ -20,7 +20,9 @@ export default function AboutPage({ onOpenDemo, onNavigate }) {
       {/* ---------------------------------------------------- */}
       <section className="about-hero">
         <div className="about-hero__inner">
-          <p className="jp-label jp-label--light">（フライについて）</p>
+          <span className="about-acronym-chip">
+            ⚡ FURAI = Fix Ur Alignment Issue
+          </span>
           <h1 className="about-hero__title">
             MEET FURAI.
           </h1>
@@ -85,6 +87,15 @@ export default function AboutPage({ onOpenDemo, onNavigate }) {
                 <p className="body">
                   <strong>Furai was created as a supportive, calm companion</strong>: an on-device posture guardian that watches your alignment with empathy. No expensive harnesses, no wearable straps, and no judgment.
                 </p>
+
+                {/* Acronym Explainer Box */}
+                <div className="about-acronym-banner">
+                  <span className="about-acronym-tag">THE NAME & MEANING // 由来</span>
+                  <h3><strong>F.U.R.A.I</strong> stands for <strong>Fix Ur Alignment Issue</strong></h3>
+                  <p>
+                    A playful double meaning: inspired by uncurling from the crispy Japanese <em>Ebi Furai</em> (fried shrimp) slouch, and literally engineered to <strong>Fix Ur Alignment Issue</strong> directly in your browser.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
