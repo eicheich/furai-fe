@@ -21,6 +21,11 @@ import {
   ChevronRight,
   Maximize2
 } from 'lucide-react';
+import {
+  extractPostureFeatures,
+  CalibratedPostureDetector,
+  ensureMediaPipeLoaded,
+} from '../utils/postureEngine';
 
 /* ------------------------------------------------------------------ */
 /* Web Audio API Synthesizer (Gentle, supportive sound nudges)        */
@@ -143,6 +148,46 @@ const STRETCHES = [
     const videoRef = useRef(null);
     const streamRef = useRef(null);
 
+    /* Calibrated Posture Engine Ref & Real-time Landmarks */
+    const detectorRef = useRef(new CalibratedPostureDetector({ sensitivity }));
+    const poseRef = useRef(null);
+    const animFrameRef = useRef(null);
+    const isProcessingRef = useRef(false);
+    const lastNudgeRef = useRef(0);
+
+    const [liveCoords, setLiveCoords] = useState(null);
+    const [liveStatusText, setLiveStatusText] = useState('Kamera nonaktif');
+    const [isCalibratingLive, setIsCalibratingLive] = useState(false);
+
+    useEffect(() => {
+      detectorRef.current.setSensitivity(sensitivity);
+    }, [sensitivity]);
+
+    // Shortcut: tekan 'c' di keyboard untuk kalibrasi (sama persis seperti 02_deteksi_bungkuk.py)
+    useEffect(() => {
+      const handleKey = (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (e.key === 'c' || e.key === 'C') {
+          startCalibration();
+        }
+      };
+      window.addEventListener('keydown', handleKey);
+      return () => window.removeEventListener('keydown', handleKey);
+    }, [cameraActive]);
+
+    // Cleanup kamera dan frame loop saat unmount
+    useEffect(() => {
+      return () => {
+        if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+        if (poseRef.current) {
+          try { poseRef.current.close(); } catch (e) {}
+        }
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((t) => t.stop());
+        }
+      };
+    }, []);
+
     /* Calculate Posture Health Score */
     const postureScore = totalDetectedSeconds > 0
       ? Math.round((uprightSeconds / totalDetectedSeconds) * 100)
@@ -240,33 +285,136 @@ const STRETCHES = [
     };
 
     /* ------------------------------------------------------------------ */
-    /* Real Webcam Activation (FR-01, FR-02)                              */
+    /* Real Webcam & MediaPipe Pose Activation (02_deteksi_bungkuk.py)    */
     /* ------------------------------------------------------------------ */
     const startCamera = async () => {
       try {
         setCameraPermission('idle');
+        setLiveStatusText('Memulai webcam & memuat MediaPipe AI...');
         const constraints = {
           video: {
             width: { ideal: potatoMode ? 480 : 640 },
             height: { ideal: potatoMode ? 360 : 480 },
             frameRate: { ideal: potatoMode ? 15 : 30 },
+            facingMode: 'user',
           },
         };
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          videoRef.current.play();
+          await videoRef.current.play();
         }
         setCameraActive(true);
         setCameraPermission('granted');
-      } catch {
+
+        // Pastikan pustaka MediaPipe termuat
+        await ensureMediaPipeLoaded();
+
+        if (window.Pose) {
+          const pose = new window.Pose({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
+          });
+
+          pose.setOptions({
+            modelComplexity: potatoMode ? 0 : 1,
+            smoothLandmarks: true,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5,
+          });
+
+          pose.onResults((results) => {
+            if (!results) return;
+            const v = videoRef.current;
+            if (!v) return;
+            const w = v.videoWidth || 640;
+            const h = v.videoHeight || 480;
+
+            let features = null;
+            if (results.poseLandmarks) {
+              features = extractPostureFeatures(results.poseLandmarks, w, h);
+            }
+
+            const res = detectorRef.current.processFrame(features);
+            setLiveStatusText(res.statusText);
+
+            if (res.state === 'calibrating') {
+              setIsCalibratingLive(true);
+              setCalibProgress(res.progress || 0);
+            } else if (res.state === 'calibrated' || res.justFinishedCalibration) {
+              setIsCalibratingLive(false);
+              setCalibProgress(100);
+              setBaselineCalibrated(true);
+              if (soundEnabled) playTone('success');
+            }
+
+            if (res.state === 'aligned' || res.state === 'calibrated') {
+              setPostureState('aligned');
+              setShowNudgeToast(false);
+            } else if (res.state === 'slouching') {
+              setPostureState('slouching');
+              if (res.alertActive) {
+                const now = Date.now();
+                if (now - lastNudgeRef.current > 8000) {
+                  lastNudgeRef.current = now;
+                  setSlouchAlertCount((c) => c + 1);
+                  setNudgeMessage('LURUSKAN PUNGGUNG! (Terdeteksi bungkuk > 3 detik)');
+                  setShowNudgeToast(true);
+                  if (soundEnabled) playTone('nudge');
+                }
+              }
+            } else if (res.state === 'out_of_frame') {
+              setPostureState('out_of_frame');
+            }
+
+            if (res.coords) {
+              setLiveCoords(res.coords);
+            }
+          });
+
+          poseRef.current = pose;
+
+          // RequestAnimationFrame loop dengan pembatasan frame rate
+          let lastFrameTime = 0;
+          const targetInterval = potatoMode ? 1000 / 15 : 1000 / 30;
+
+          const processLoop = async (timestamp) => {
+            if (!streamRef.current || !videoRef.current || !poseRef.current) return;
+
+            if (timestamp - lastFrameTime >= targetInterval) {
+              if (videoRef.current.readyState >= 2 && !isProcessingRef.current) {
+                isProcessingRef.current = true;
+                try {
+                  await poseRef.current.send({ image: videoRef.current });
+                } catch (err) {
+                  // drop frame
+                }
+                isProcessingRef.current = false;
+                lastFrameTime = timestamp;
+              }
+            }
+            animFrameRef.current = requestAnimationFrame(processLoop);
+          };
+
+          animFrameRef.current = requestAnimationFrame(processLoop);
+        }
+      } catch (err) {
+        console.warn('Camera access error:', err);
         setCameraPermission('denied');
         setCameraActive(false);
+        setLiveStatusText('Izin webcam ditolak');
       }
     };
 
     const stopCamera = () => {
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
+      }
+      if (poseRef.current) {
+        try { poseRef.current.close(); } catch (e) {}
+        poseRef.current = null;
+      }
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
@@ -275,29 +423,27 @@ const STRETCHES = [
         videoRef.current.srcObject = null;
       }
       setCameraActive(false);
+      setLiveCoords(null);
+      setLiveStatusText('Kamera nonaktif');
     };
 
     /* ------------------------------------------------------------------ */
-    /* 10-Second Baseline Calibration (FR-03)                             */
+    /* 5-Second Baseline Calibration (Ported from 02_deteksi_bungkuk.py)   */
     /* ------------------------------------------------------------------ */
-    const startCalibration = () => {
-      setIsCalibrating(true);
-      setCalibProgress(0);
-      setActiveTab('calibration');
-
-      const interval = setInterval(() => {
-        setCalibProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setIsCalibrating(false);
-            setBaselineCalibrated(true);
-            if (soundEnabled) playTone('success');
-            setTimeout(() => setActiveTab('workspace'), 600);
-            return 100;
-          }
-          return prev + 10;
-        });
-      }, 1000);
+    const startCalibration = async () => {
+      if (cameraActive) {
+        detectorRef.current.startCalibration();
+        setIsCalibratingLive(true);
+        setCalibProgress(0);
+        setLiveStatusText('Duduk TEGAK selama 5 detik...');
+      } else {
+        await startCamera();
+        setTimeout(() => {
+          detectorRef.current.startCalibration();
+          setIsCalibratingLive(true);
+          setCalibProgress(0);
+        }, 1200);
+      }
     };
 
     /* ------------------------------------------------------------------ */
@@ -458,6 +604,15 @@ const STRETCHES = [
                 <div className="viewfinder-controls">
                   <button
                     type="button"
+                    className={`vf-icon-btn ${isCalibratingLive ? 'is-active' : ''}`}
+                    onClick={startCalibration}
+                    title="5-Second Posture Calibration (or press 'c')"
+                  >
+                    <Sparkles size={16} />
+                  </button>
+
+                  <button
+                    type="button"
                     className={`vf-icon-btn ${soundEnabled ? 'is-active' : ''}`}
                     onClick={() => setSoundEnabled(!soundEnabled)}
                     title={soundEnabled ? 'Sound alerts ON' : 'Sound alerts muted'}
@@ -504,75 +659,161 @@ const STRETCHES = [
 
                 {/* Pose Landmark HUD Overlay */}
                 <svg className="vf-hud" viewBox="0 0 400 300" fill="none">
-                  {/* Spine Curvature Vector */}
-                  {postureState === 'aligned' ? (
-                    <path
-                      d="M 200 70 L 200 130 L 195 210"
-                      stroke="var(--mint)"
-                      strokeWidth="4"
-                      strokeLinecap="round"
-                      className="vf-spine-line"
-                    />
-                  ) : postureState === 'slouching' ? (
-                    <path
-                      d="M 160 85 Q 260 90 230 210"
-                      stroke="var(--shrimp)"
-                      strokeWidth="4"
-                      strokeDasharray="6 6"
-                      strokeLinecap="round"
-                      className="vf-spine-line"
-                    />
-                  ) : null}
+                  {cameraActive && liveCoords && videoRef.current ? (
+                    (() => {
+                      const vw = videoRef.current.videoWidth || 640;
+                      const vh = videoRef.current.videoHeight || 480;
+                      const sx = (x) => (x / vw) * 400;
+                      const sy = (y) => (y / vh) * 300;
 
-                  {/* Landmark Nodes (Ear, Shoulder, Hip) */}
-                  {postureState !== 'out_of_frame' && (
+                      const earX = sx(liveCoords.earMid.x);
+                      const earY = sy(liveCoords.earMid.y);
+                      const shX = sx(liveCoords.shoulderMid.x);
+                      const shY = sy(liveCoords.shoulderMid.y);
+                      const shLeftX = sx(liveCoords.shoulderLeft.x);
+                      const shLeftY = sy(liveCoords.shoulderLeft.y);
+                      const shRightX = sx(liveCoords.shoulderRight.x);
+                      const shRightY = sy(liveCoords.shoulderRight.y);
+                      const hipEstY = Math.min(285, shY + liveCoords.lebarBahu * 0.75 * (300 / vh));
+                      const isAligned = postureState === 'aligned';
+
+                      return (
+                        <g>
+                          {/* Shoulder span vector */}
+                          <line
+                            x1={shLeftX}
+                            y1={shLeftY}
+                            x2={shRightX}
+                            y2={shRightY}
+                            stroke={isAligned ? 'var(--mint)' : 'var(--shrimp)'}
+                            strokeWidth="3.5"
+                            strokeLinecap="round"
+                          />
+                          {/* Cervical spine vector */}
+                          <line
+                            x1={earX}
+                            y1={earY}
+                            x2={shX}
+                            y2={shY}
+                            stroke={isAligned ? 'var(--mint)' : 'var(--shrimp)'}
+                            strokeWidth="4"
+                            strokeDasharray={isAligned ? 'none' : '5 5'}
+                            strokeLinecap="round"
+                          />
+                          {/* Thoracic spine vector */}
+                          <line
+                            x1={shX}
+                            y1={shY}
+                            x2={shX}
+                            y2={hipEstY}
+                            stroke={isAligned ? 'var(--mint)' : 'var(--shrimp)'}
+                            strokeWidth="4"
+                            strokeDasharray={isAligned ? 'none' : '5 5'}
+                            strokeLinecap="round"
+                          />
+                          {/* Landmark nodes */}
+                          <circle cx={earX} cy={earY} r="6" fill="#fff" stroke={isAligned ? 'var(--mint)' : 'var(--shrimp)'} strokeWidth="3" />
+                          <circle cx={shLeftX} cy={shLeftY} r="5" fill="#fff" stroke={isAligned ? 'var(--mint)' : 'var(--shrimp)'} strokeWidth="2.5" />
+                          <circle cx={shRightX} cy={shRightY} r="5" fill="#fff" stroke={isAligned ? 'var(--mint)' : 'var(--shrimp)'} strokeWidth="2.5" />
+                          <circle cx={shX} cy={shY} r="5" fill={isAligned ? 'var(--mint)' : 'var(--shrimp)'} />
+                        </g>
+                      );
+                    })()
+                  ) : (
                     <>
-                      <circle
-                        cx={postureState === 'aligned' ? 200 : 160}
-                        cy={postureState === 'aligned' ? 70 : 85}
-                        r="5"
-                        fill="#fff"
-                        stroke={postureState === 'aligned' ? 'var(--mint)' : 'var(--shrimp)'}
-                        strokeWidth="2.5"
-                      />
-                      <circle
-                        cx={postureState === 'aligned' ? 200 : 220}
-                        cy={postureState === 'aligned' ? 130 : 135}
-                        r="5"
-                        fill="#fff"
-                        stroke={postureState === 'aligned' ? 'var(--mint)' : 'var(--shrimp)'}
-                        strokeWidth="2.5"
-                      />
-                      <circle
-                        cx={postureState === 'aligned' ? 195 : 230}
-                        cy={210}
-                        r="5"
-                        fill="#fff"
-                        stroke={postureState === 'aligned' ? 'var(--mint)' : 'var(--shrimp)'}
-                        strokeWidth="2.5"
-                      />
+                      {/* Spine Curvature Vector */}
+                      {postureState === 'aligned' ? (
+                        <path
+                          d="M 200 70 L 200 130 L 195 210"
+                          stroke="var(--mint)"
+                          strokeWidth="4"
+                          strokeLinecap="round"
+                          className="vf-spine-line"
+                        />
+                      ) : postureState === 'slouching' ? (
+                        <path
+                          d="M 160 85 Q 260 90 230 210"
+                          stroke="var(--shrimp)"
+                          strokeWidth="4"
+                          strokeDasharray="6 6"
+                          strokeLinecap="round"
+                          className="vf-spine-line"
+                        />
+                      ) : null}
+
+                      {/* Landmark Nodes (Ear, Shoulder, Hip) */}
+                      {postureState !== 'out_of_frame' && (
+                        <>
+                          <circle
+                            cx={postureState === 'aligned' ? 200 : 160}
+                            cy={postureState === 'aligned' ? 70 : 85}
+                            r="5"
+                            fill="#fff"
+                            stroke={postureState === 'aligned' ? 'var(--mint)' : 'var(--shrimp)'}
+                            strokeWidth="2.5"
+                          />
+                          <circle
+                            cx={postureState === 'aligned' ? 200 : 220}
+                            cy={postureState === 'aligned' ? 130 : 135}
+                            r="5"
+                            fill="#fff"
+                            stroke={postureState === 'aligned' ? 'var(--mint)' : 'var(--shrimp)'}
+                            strokeWidth="2.5"
+                          />
+                          <circle
+                            cx={postureState === 'aligned' ? 195 : 230}
+                            cy={210}
+                            r="5"
+                            fill="#fff"
+                            stroke={postureState === 'aligned' ? 'var(--mint)' : 'var(--shrimp)'}
+                            strokeWidth="2.5"
+                          />
+                        </>
+                      )}
                     </>
                   )}
                 </svg>
 
                 {/* Status Overlay Pill */}
                 <div className="vf-badge-tag">
-                  {postureState === 'aligned' && (
-                    <span className="vf-badge vf-badge--aligned">
+                  {isCalibratingLive ? (
+                    <span className="vf-badge" style={{ background: 'var(--yellow)', color: 'var(--ink)' }}>
+                      <span className="vf-badge__dot" style={{ background: '#161616' }} />
+                      <b>KALIBRASI ({Math.round(calibProgress)}%) · Duduk Tegak</b>
+                    </span>
+                  ) : cameraActive && liveStatusText ? (
+                    <span
+                      className={`vf-badge ${
+                        postureState === 'aligned'
+                          ? 'vf-badge--aligned'
+                          : postureState === 'slouching'
+                          ? 'vf-badge--slouch'
+                          : 'vf-badge--empty'
+                      }`}
+                    >
                       <span className="vf-badge__dot" />
-                      <b>ピン ALIGNED</b> · {postureAngle}°
+                      <b>{liveStatusText}</b>
                     </span>
-                  )}
-                  {postureState === 'slouching' && (
-                    <span className="vf-badge vf-badge--slouch">
-                      <span className="vf-badge__dot" />
-                      <b>猫背 SLOUCH</b> · {postureAngle}°
-                    </span>
-                  )}
-                  {postureState === 'out_of_frame' && (
-                    <span className="vf-badge vf-badge--empty">
-                      <b>不在 OUT OF FRAME</b> · Timer Paused
-                    </span>
+                  ) : (
+                    <>
+                      {postureState === 'aligned' && (
+                        <span className="vf-badge vf-badge--aligned">
+                          <span className="vf-badge__dot" />
+                          <b>ピン ALIGNED</b> · {postureAngle}°
+                        </span>
+                      )}
+                      {postureState === 'slouching' && (
+                        <span className="vf-badge vf-badge--slouch">
+                          <span className="vf-badge__dot" />
+                          <b>猫背 SLOUCH</b> · {postureAngle}°
+                        </span>
+                      )}
+                      {postureState === 'out_of_frame' && (
+                        <span className="vf-badge vf-badge--empty">
+                          <b>不在 OUT OF FRAME</b> · Timer Paused
+                        </span>
+                      )}
+                    </>
                   )}
                 </div>
 
