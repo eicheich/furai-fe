@@ -138,6 +138,12 @@ export default function StudyPage({ user, onBackToHome, onOpenProfile }) {
     }
   }, [showCalibModal, cameraActive]);
 
+  // Sinkronisasi sensitivitas dari pengaturan user
+  useEffect(() => {
+    const s = localStorage.getItem('furai_pref_sens') || 'medium';
+    detectorRef.current.setSensitivity(s);
+  }, []);
+
   // Shortcut keyboard: Tekan 'c' untuk kalibrasi ulang cepat
   useEffect(() => {
     const handleKey = (e) => {

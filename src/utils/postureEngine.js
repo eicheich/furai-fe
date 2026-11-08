@@ -1,8 +1,9 @@
 /**
  * Furai Biomechanical Posture Engine
- * Directly ported from model/02_deteksi_bungkuk.py
+ * Diadaptasi dari model/02_deteksi_bungkuk.py dengan sensitivitas tinggi (sub-angle precision)
  *
  * MediaPipe Pose Landmark Indices:
+ *   0: NOSE
  *   7: LEFT_EAR
  *   8: RIGHT_EAR
  *   11: LEFT_SHOULDER
@@ -11,26 +12,26 @@
 
 export const POSTURE_CONSTANTS = {
   CALIBRATION_DURATION_SEC: 5, // 5 detik duduk tegak untuk baseline
-  THRESHOLD_DOWN: 0.93, // jarak telinga-bahu < 93% baseline -> kepala turun
-  THRESHOLD_FORWARD: 1.08, // lebar bahu > 108% baseline -> badan maju ke layar
-  SMOOTHING_WINDOW_SIZE: 10, // voting mayoritas dari 10 frame terakhir
-  ALERT_TRIGGER_SECONDS: 3, // detik bungkuk terus-menerus sebelum alert
-  MIN_VISIBILITY: 0.5,
+  THRESHOLD_DOWN: 0.965, // jarak kepala/hidung ke bahu turun ~3.5% -> langsung deteksi bungkuk!
+  THRESHOLD_FORWARD: 1.04, // lebar bahu bertambah ~4% (condong maju) -> langsung deteksi bungkuk!
+  SMOOTHING_WINDOW_SIZE: 8, // responsif ~250ms (8 frame)
+  ALERT_TRIGGER_SECONDS: 2, // 2 detik terus-menerus bungkuk -> beri notifikasi suara
+  MIN_VISIBILITY: 0.45,
 };
 
 /**
  * Ekstraksi fitur biomekanik dari landmark MediaPipe.
- * Equivalent to `ambil_fitur(lm, w, h)` in 02_deteksi_bungkuk.py
  */
 export function extractPostureFeatures(landmarks, width, height) {
   if (!landmarks || landmarks.length < 13) return null;
 
+  const nose = landmarks[0];
   const leftEar = landmarks[7];
   const rightEar = landmarks[8];
   const leftShoulder = landmarks[11];
   const rightShoulder = landmarks[12];
 
-  // Cek visibility (MIN_VISIBILITY = 0.5)
+  // Cek visibility minimal untuk node bahu dan telinga
   const keyNodes = [leftEar, rightEar, leftShoulder, rightShoulder];
   if (
     keyNodes.some(
@@ -47,6 +48,7 @@ export function extractPostureFeatures(landmarks, width, height) {
   const bahuKanan = p(rightShoulder);
   const telingaKiri = p(leftEar);
   const telingaKanan = p(rightEar);
+  const hidung = nose && (nose.visibility === undefined || nose.visibility >= 0.4) ? p(nose) : null;
 
   const lebarBahu = Math.hypot(bahuKiri.x - bahuKanan.x, bahuKiri.y - bahuKanan.y);
   if (lebarBahu < 1) return null;
@@ -60,15 +62,18 @@ export function extractPostureFeatures(landmarks, width, height) {
     y: (telingaKiri.y + telingaKanan.y) / 2,
   };
 
+  // Posisi vertikal telinga vs bahu
+  const jarakKepalaBahu = (tengahBahu.y - tengahTelinga.y) / lebarBahu;
+  // Posisi vertikal hidung vs bahu (saat nunduk leher sedikit, hidung turun lebih cepat)
+  const jarakHidungBahu = hidung ? (tengahBahu.y - hidung.y) / lebarBahu : null;
+
   return {
-    // Makin kecil = kepala makin turun mendekati bahu (slouch down)
-    jarak_kepala_bahu: (tengahBahu.y - tengahTelinga.y) / lebarBahu,
-    // Makin besar = badan makin maju ke kamera (forward slouch)
+    jarak_kepala_bahu: jarakKepalaBahu,
+    jarak_hidung_bahu: jarakHidungBahu,
     lebar_bahu_rel: lebarBahu / width,
-    // Kemiringan bahu
     miring_bahu: Math.abs(bahuKiri.y - bahuKanan.y) / lebarBahu,
-    // Koordinat mentah untuk visualisasi HUD live
     coords: {
+      nose: hidung,
       earMid: tengahTelinga,
       shoulderMid: tengahBahu,
       shoulderLeft: bahuKiri,
@@ -79,17 +84,25 @@ export function extractPostureFeatures(landmarks, width, height) {
 }
 
 /**
- * Detektor Postur Berbasis Kalibrasi Adaptif
+ * Detektor Postur Berbasis Kalibrasi Adaptif dengan Sensitivitas Tinggi
  */
 export class CalibratedPostureDetector {
   constructor(options = {}) {
     this.sensitivity = options.sensitivity || 'medium';
-    this.baseline = null;
     this.history = [];
     this.slouchStartTime = null;
     this.samples = [];
     this.isCalibrating = false;
     this.calibStartTime = 0;
+
+    // Muat baseline tersimpan dari localStorage bila tersedia
+    this.baseline = null;
+    try {
+      const saved = localStorage.getItem('furai_posture_baseline');
+      if (saved) {
+        this.baseline = JSON.parse(saved);
+      }
+    } catch (e) {}
   }
 
   setSensitivity(s) {
@@ -99,10 +112,12 @@ export class CalibratedPostureDetector {
   getThresholds() {
     switch (this.sensitivity) {
       case 'low':
-        return { down: 0.88, forward: 1.14 }; // Lebih toleran
+        // Agak toleran (turun ~6% atau maju ~7%)
+        return { down: 0.94, forward: 1.07 };
       case 'high':
-        return { down: 0.96, forward: 1.05 }; // Sangat ketat
-      default:
+        // Super sensitif (turun ~2.2% atau maju ~2.5% langsung terdeteksi)
+        return { down: 0.978, forward: 1.025 };
+      default: // medium (default sensitif tinggi: nunduk ~3.5% langsung terdeteksi)
         return {
           down: POSTURE_CONSTANTS.THRESHOLD_DOWN,
           forward: POSTURE_CONSTANTS.THRESHOLD_FORWARD,
@@ -110,11 +125,22 @@ export class CalibratedPostureDetector {
     }
   }
 
+  getEffectiveBaseline() {
+    if (this.baseline) return this.baseline;
+    // Nilai acuan default realistis sebelum kalibrasi
+    return {
+      jarak_kepala_bahu: 0.44,
+      jarak_hidung_bahu: 0.40,
+      lebar_bahu_rel: 0.38,
+      miring_bahu: 0.0,
+      isDefault: true,
+    };
+  }
+
   startCalibration() {
     this.isCalibrating = true;
     this.calibStartTime = Date.now();
     this.samples = [];
-    this.baseline = null;
     this.history = [];
     this.slouchStartTime = null;
   }
@@ -147,11 +173,21 @@ export class CalibratedPostureDetector {
         const avgLebar = this.samples.reduce((acc, s) => acc + s.lebar_bahu_rel, 0) / n;
         const avgMiring = this.samples.reduce((acc, s) => acc + s.miring_bahu, 0) / n;
 
+        const validNoseSamples = this.samples.filter((s) => s.jarak_hidung_bahu !== null);
+        const avgHidung = validNoseSamples.length > 0
+          ? validNoseSamples.reduce((acc, s) => acc + s.jarak_hidung_bahu, 0) / validNoseSamples.length
+          : null;
+
         this.baseline = {
           jarak_kepala_bahu: avgJarak,
+          jarak_hidung_bahu: avgHidung,
           lebar_bahu_rel: avgLebar,
           miring_bahu: avgMiring,
         };
+
+        try {
+          localStorage.setItem('furai_posture_baseline', JSON.stringify(this.baseline));
+        } catch (e) {}
 
         this.isCalibrating = false;
         this.history = [];
@@ -186,66 +222,63 @@ export class CalibratedPostureDetector {
       };
     }
 
-    // 2. Fase Deteksi Normal (Bila Baseline Sudah Ada)
-    if (this.baseline) {
-      const thresholds = this.getThresholds();
-      const turun = features.jarak_kepala_bahu < this.baseline.jarak_kepala_bahu * thresholds.down;
-      const maju = features.lebar_bahu_rel > this.baseline.lebar_bahu_rel * thresholds.forward;
+    // 2. Fase Deteksi Postur (Baseline Kalibrasi atau Default)
+    const base = this.getEffectiveBaseline();
+    const thresholds = this.getThresholds();
 
-      const isFrameSlouch = turun || maju;
-      this.history.push(isFrameSlouch ? 1 : 0);
-      if (this.history.length > POSTURE_CONSTANTS.SMOOTHING_WINDOW_SIZE) {
-        this.history.shift();
-      }
+    // Deteksi apakah kepala turun (telinga atau hidung mendekat ke bahu)
+    const turunTelinga = features.jarak_kepala_bahu < base.jarak_kepala_bahu * thresholds.down;
+    const turunHidung = features.jarak_hidung_bahu && base.jarak_hidung_bahu
+      ? features.jarak_hidung_bahu < base.jarak_hidung_bahu * thresholds.down
+      : false;
 
-      // Majority voting dari 10 frame terakhir
-      const isSlouch =
-        this.history.length === POSTURE_CONSTANTS.SMOOTHING_WINDOW_SIZE &&
-        this.history.reduce((a, b) => a + b, 0) > this.history.length / 2;
+    // Deteksi apakah condong maju ke layar (lebar bahu membesar di kamera)
+    const maju = features.lebar_bahu_rel > base.lebar_bahu_rel * thresholds.forward;
 
-      if (isSlouch) {
-        if (!this.slouchStartTime) {
-          this.slouchStartTime = now;
-        }
-        const durationSec = (now - this.slouchStartTime) / 1000;
-        const alertActive = durationSec >= POSTURE_CONSTANTS.ALERT_TRIGGER_SECONDS;
+    // Cukup salah satu terdeteksi (nunduk sedikit atau maju sedikit)
+    const isFrameSlouch = turunTelinga || turunHidung || maju;
 
-        return {
-          state: 'slouching',
-          statusText: `BUNGKUK (${durationSec.toFixed(0)}s)`,
-          color: 'var(--shrimp)',
-          alertActive,
-          alertMessage: alertActive ? 'LURUSKAN PUNGGUNG!' : '',
-          slouchDuration: durationSec,
-          turun,
-          maju,
-          baseline: this.baseline,
-          coords: features.coords,
-        };
-      } else {
-        this.slouchStartTime = null;
-        return {
-          state: 'aligned',
-          statusText: 'TEGAK',
-          color: 'var(--mint)',
-          alertActive: false,
-          slouchDuration: 0,
-          baseline: this.baseline,
-          coords: features.coords,
-        };
-      }
+    this.history.push(isFrameSlouch ? 1 : 0);
+    if (this.history.length > POSTURE_CONSTANTS.SMOOTHING_WINDOW_SIZE) {
+      this.history.shift();
     }
 
-    // Baseline belum dikalibrasi
-    return {
-      state: 'uncalibrated',
-      statusText: "Klik 'Start 5s Calibration' untuk baseline",
-      color: '#ffffff',
-      alertActive: false,
-      slouchDuration: 0,
-      baseline: null,
-      coords: features.coords,
-    };
+    // Cepat tanggap: jika minimal 3 dari 8 frame terakhir terdeteksi bungkuk (~100ms)
+    const isSlouch =
+      this.history.length >= 4 &&
+      this.history.reduce((a, b) => a + b, 0) >= 3;
+
+    if (isSlouch) {
+      if (!this.slouchStartTime) {
+        this.slouchStartTime = now;
+      }
+      const durationSec = (now - this.slouchStartTime) / 1000;
+      const alertActive = durationSec >= POSTURE_CONSTANTS.ALERT_TRIGGER_SECONDS;
+
+      return {
+        state: 'slouching',
+        statusText: `BUNGKUK (${durationSec.toFixed(0)}s)`,
+        color: 'var(--shrimp)',
+        alertActive,
+        alertMessage: alertActive ? 'LURUSKAN PUNGGUNG!' : '',
+        slouchDuration: durationSec,
+        turun: turunTelinga || turunHidung,
+        maju,
+        baseline: base,
+        coords: features.coords,
+      };
+    } else {
+      this.slouchStartTime = null;
+      return {
+        state: 'aligned',
+        statusText: 'TEGAK',
+        color: 'var(--mint)',
+        alertActive: false,
+        slouchDuration: 0,
+        baseline: base,
+        coords: features.coords,
+      };
+    }
   }
 }
 
@@ -279,4 +312,3 @@ export function ensureMediaPipeLoaded() {
     document.head.appendChild(script1);
   });
 }
-
