@@ -63,7 +63,7 @@ function playTone(type = 'chime') {
       osc.stop(now + 0.62);
     }
   } catch {
-    // Audio context may require user interaction
+    // Audio context may require user gesture
   }
 }
 
@@ -114,6 +114,28 @@ export default function StudyPage({ user, onBackToHome, onOpenProfile }) {
 
   const [liveCoords, setLiveCoords] = useState(null);
   const [liveStatusText, setLiveStatusText] = useState('Kamera nonaktif');
+
+  // Pastikan stream terpasang ke videoRef saat cameraActive berubah
+  useEffect(() => {
+    if (cameraActive && streamRef.current && videoRef.current) {
+      if (videoRef.current.srcObject !== streamRef.current) {
+        videoRef.current.srcObject = streamRef.current;
+      }
+      videoRef.current.play().catch((err) => {
+        console.warn('Play error in cameraActive effect:', err);
+      });
+    }
+  }, [cameraActive]);
+
+  // Pasang stream ke modalVideoRef bila modal kalibrasi aktif
+  useEffect(() => {
+    if (showCalibModal && cameraActive && streamRef.current && modalVideoRef.current) {
+      if (modalVideoRef.current.srcObject !== streamRef.current) {
+        modalVideoRef.current.srcObject = streamRef.current;
+      }
+      modalVideoRef.current.play().catch(() => {});
+    }
+  }, [showCalibModal, cameraActive]);
 
   // Shortcut keyboard: Tekan 'c' untuk kalibrasi ulang cepat
   useEffect(() => {
@@ -186,36 +208,13 @@ export default function StudyPage({ user, onBackToHome, onOpenProfile }) {
     }
   };
 
-  /* Aktifkan Webcam & Inisialisasi MediaPipe Pose */
-  const startCamera = async () => {
+  /* Inisialisasi MediaPipe Pose di background tanpa memblokir video */
+  const initMediaPipe = async () => {
     try {
-      setLiveStatusText('Menyiapkan webcam & MediaPipe...');
-      const constraints = {
-        video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          frameRate: { ideal: 30 },
-          facingMode: 'user',
-        },
-      };
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      streamRef.current = stream;
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-      if (modalVideoRef.current) {
-        modalVideoRef.current.srcObject = stream;
-        try { await modalVideoRef.current.play(); } catch (e) {}
-      }
-
-      setCameraActive(true);
-
-      // Memuat pustaka MediaPipe jika belum terpasang
       await ensureMediaPipeLoaded();
+      if (!window.Pose) return;
 
-      if (window.Pose && !poseRef.current) {
+      if (!poseRef.current) {
         const pose = new window.Pose({
           locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
         });
@@ -228,9 +227,8 @@ export default function StudyPage({ user, onBackToHome, onOpenProfile }) {
         });
 
         pose.onResults((results) => {
-          if (!results) return;
-          const v = videoRef.current || modalVideoRef.current;
-          if (!v) return;
+          if (!results || !videoRef.current) return;
+          const v = videoRef.current;
           const w = v.videoWidth || 640;
           const h = v.videoHeight || 480;
 
@@ -253,11 +251,11 @@ export default function StudyPage({ user, onBackToHome, onOpenProfile }) {
             localStorage.setItem('furai_baseline_calibrated', 'true');
             if (soundEnabled) playTone('success');
 
-            // Tutup modal otomatis setelah 1.6 detik
+            // Tutup modal otomatis setelah 1.5 detik
             setTimeout(() => {
               setShowCalibModal(false);
               setCalibSuccessNotice(false);
-            }, 1600);
+            }, 1500);
           }
 
           if (res.state === 'aligned' || res.state === 'calibrated') {
@@ -285,20 +283,22 @@ export default function StudyPage({ user, onBackToHome, onOpenProfile }) {
         });
 
         poseRef.current = pose;
+      }
 
-        // Loop analisis frame requestAnimationFrame
+      // Loop pengiriman frame ke pose analyzer
+      if (!animFrameRef.current) {
         let lastFrameTime = 0;
         const targetInterval = 1000 / 30;
 
         const processLoop = async (timestamp) => {
-          const currentV = videoRef.current || modalVideoRef.current;
-          if (!streamRef.current || !currentV || !poseRef.current) return;
+          const v = videoRef.current;
+          if (!streamRef.current || !v || !poseRef.current) return;
 
           if (timestamp - lastFrameTime >= targetInterval) {
-            if (currentV.readyState >= 2 && !isProcessingRef.current) {
+            if (v.readyState >= 2 && !isProcessingRef.current) {
               isProcessingRef.current = true;
               try {
-                await poseRef.current.send({ image: currentV });
+                await poseRef.current.send({ image: v });
               } catch (err) {
                 // frame drop aman
               }
@@ -312,9 +312,56 @@ export default function StudyPage({ user, onBackToHome, onOpenProfile }) {
         animFrameRef.current = requestAnimationFrame(processLoop);
       }
     } catch (err) {
-      console.warn('Webcam error:', err);
+      console.warn('MediaPipe init error:', err);
+    }
+  };
+
+  /* Aktifkan Webcam & Langsung Tampilkan Muka Pengguna */
+  const startCamera = async () => {
+    try {
+      setLiveStatusText('Menghubungkan webcam...');
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: 'user',
+        },
+        audio: false,
+      });
+
+      streamRef.current = stream;
+
+      // Pasang langsung ke elemen video utama
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        try {
+          await videoRef.current.play();
+        } catch (e) {
+          console.warn('Video play error on start:', e);
+        }
+      }
+
+      // Pasang juga ke elemen video modal bila terbuka
+      if (modalVideoRef.current) {
+        modalVideoRef.current.srcObject = stream;
+        try {
+          await modalVideoRef.current.play();
+        } catch (e) {}
+      }
+
+      setCameraActive(true);
+      setLiveStatusText('Kamera aktif · Mendeteksi postur...');
+
+      // Inisialisasi MediaPipe setelah video siap
+      initMediaPipe();
+    } catch (err) {
+      console.error('Camera access error:', err);
       setCameraActive(false);
-      setLiveStatusText('Izin webcam belum diberikan');
+      setLiveStatusText('Akses kamera tidak diizinkan / kamera tidak ditemukan');
     }
   };
 
@@ -334,6 +381,9 @@ export default function StudyPage({ user, onBackToHome, onOpenProfile }) {
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
+    if (modalVideoRef.current) {
+      modalVideoRef.current.srcObject = null;
+    }
     setCameraActive(false);
     setLiveCoords(null);
     setLiveStatusText('Kamera nonaktif');
@@ -344,16 +394,11 @@ export default function StudyPage({ user, onBackToHome, onOpenProfile }) {
     setCalibSuccessNotice(false);
     if (!cameraActive) {
       await startCamera();
-      setTimeout(() => {
-        detectorRef.current.startCalibration();
-        setIsCalibratingLive(true);
-        setCalibProgress(0);
-      }, 1000);
-    } else {
-      detectorRef.current.startCalibration();
-      setIsCalibratingLive(true);
-      setCalibProgress(0);
     }
+    // Mulai perekaman baseline
+    detectorRef.current.startCalibration();
+    setIsCalibratingLive(true);
+    setCalibProgress(0);
   };
 
   const openCalibrationFlow = () => {
@@ -495,15 +540,18 @@ export default function StudyPage({ user, onBackToHome, onOpenProfile }) {
 
               {/* Viewfinder Canvas Stage */}
               <div className="vf-stage">
-                {cameraActive ? (
-                  <video
-                    ref={videoRef}
-                    playsInline
-                    muted
-                    className="vf-video"
-                  />
-                ) : (
-                  /* Fallback Illustration when camera is inactive */
+                {/* Elemen Video Selalu di DOM agar stream langsung terikat */}
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="vf-video"
+                  style={{ display: cameraActive ? 'block' : 'none' }}
+                />
+
+                {!cameraActive && (
+                  /* Fallback Illustration saat kamera belum dinyalakan */
                   <div className="vf-simulated">
                     <img
                       src="/assets/shrimp-chair.svg"
@@ -627,7 +675,7 @@ export default function StudyPage({ user, onBackToHome, onOpenProfile }) {
                 </div>
               </div>
 
-              {/* Clean Footer Bar (No simulation buttons or complex dropdowns) */}
+              {/* Clean Footer Bar */}
               <div className="vf-clean-footer">
                 <span className="vf-privacy-note">
                   <ShieldCheck size={14} />
@@ -738,7 +786,7 @@ export default function StudyPage({ user, onBackToHome, onOpenProfile }) {
               </div>
             </div>
 
-            {/* Essential Metrics Card (Clean & Focused, No Plant or Cluttered Bars) */}
+            {/* Essential Metrics Card */}
             <div className="card-staz card-staz--telemetry-clean">
               <div className="tele-clean-head">
                 <span className="jp-label">（セッション統計）</span>
@@ -818,33 +866,50 @@ export default function StudyPage({ user, onBackToHome, onOpenProfile }) {
                 Furai mendeteksi bungkuk secara adaptif dengan membandingkan posisi dudukmu terhadap acuan tegak alami. Duduklah tegak selama <strong>5 detik</strong>.
               </p>
 
-              {/* Live Calibration Visualizer */}
+              {/* Live Calibration Visualizer Stage */}
               <div className="calib-modal__stage">
-                {isCalibratingLive ? (
-                  <div className="calib-running-box">
-                    <div className="calib-ring">
-                      <span className="calib-ring-number">
-                        {Math.max(1, Math.ceil(5 - (calibProgress / 100) * 5))}s
-                      </span>
-                      <span className="calib-ring-sub">Tahan Tegak</span>
-                    </div>
-                    <div className="calib-progress-track">
-                      <div
-                        className="calib-progress-fill"
-                        style={{ width: `${calibProgress}%` }}
-                      />
-                    </div>
-                    <p className="calib-running-hint">
-                      Pandangan lurus ke depan, bahu rileks ditarik ke belakang...
-                    </p>
-                  </div>
-                ) : calibSuccessNotice || baselineCalibrated ? (
-                  <div className="calib-success-box">
-                    <div className="calib-success-icon">
-                      <Check size={28} strokeWidth={3} />
-                    </div>
-                    <h4>Postur Berhasil Terkalibrasi!</h4>
-                    <p>Posisi kepala dan lebar bahu idealmu telah tersimpan sebagai standar sesi.</p>
+                {cameraActive ? (
+                  <div className="calib-camera-preview-wrap">
+                    <video
+                      ref={modalVideoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="calib-preview-video"
+                    />
+
+                    {isCalibratingLive && (
+                      <div className="calib-overlay-countdown">
+                        <div className="calib-ring">
+                          <span className="calib-ring-number">
+                            {Math.max(1, Math.ceil(5 - (calibProgress / 100) * 5))}s
+                          </span>
+                          <span className="calib-ring-sub">Duduk Tegak</span>
+                        </div>
+                        <div className="calib-progress-track">
+                          <div
+                            className="calib-progress-fill"
+                            style={{ width: `${calibProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {(calibSuccessNotice || baselineCalibrated) && !isCalibratingLive && (
+                      <div className="calib-overlay-success">
+                        <div className="calib-success-icon">
+                          <Check size={28} strokeWidth={3} />
+                        </div>
+                        <h4>✓ Postur Terkalibrasi!</h4>
+                        <p>Posisi idealmu berhasil disimpan.</p>
+                      </div>
+                    )}
+
+                    {!isCalibratingLive && !calibSuccessNotice && !baselineCalibrated && (
+                      <div className="calib-overlay-ready">
+                        <p>Kamera aktif! Duduklah tegak menghadap layar.</p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="calib-ready-box">
@@ -887,7 +952,13 @@ export default function StudyPage({ user, onBackToHome, onOpenProfile }) {
                       onClick={run5SecondCalibration}
                     >
                       <Sparkles size={18} />
-                      <span>{baselineCalibrated ? 'Mulai Kalibrasi 5 Detik Ulang' : 'Mulai Kalibrasi (5 Detik)'}</span>
+                      <span>
+                        {!cameraActive
+                          ? '📸 Aktifkan Kamera & Mulai Kalibrasi (5s)'
+                          : baselineCalibrated
+                          ? 'Mulai Kalibrasi Ulang (5s)'
+                          : 'Mulai Kalibrasi 5 Detik'}
+                      </span>
                     </button>
 
                     <button
