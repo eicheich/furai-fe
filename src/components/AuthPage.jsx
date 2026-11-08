@@ -118,26 +118,6 @@ export default function AuthPage({ initialMode = 'login', onBack, onSuccess }) {
     }, 800);
   };
 
-  const handleDemoFill = () => {
-    if (mode === 'login') {
-      setFormData({
-        name: 'Alex Ebi',
-        email: 'alex.ebi@campus.edu',
-        password: 'password123',
-        major: 'Software Engineering',
-      });
-    } else {
-      setFormData({
-        name: 'Alex Ebi',
-        email: 'alex.ebi@campus.edu',
-        password: 'password123',
-        major: 'Computer Science & Human Factors',
-      });
-      setSelectedArchetype('coder');
-    }
-    setError('');
-  };
-
   return (
     <div className="auth-view">
       {/* Main Container */}
@@ -381,15 +361,6 @@ export default function AuthPage({ initialMode = 'login', onBack, onSuccess }) {
                   <button type="submit" className="pill pill--dark auth-submit-btn">
                     <span>{mode === 'login' ? 'Sign in to study space' : 'Create study profile'}</span>
                     <ArrowRight size={16} />
-                  </button>
-
-                  <button
-                    type="button"
-                    className="auth-demo-btn"
-                    onClick={handleDemoFill}
-                  >
-                    <span>⚡ Fill demo credentials</span>
-                    <small>（ワンクリック入力）</small>
                   </button>
                 </div>
               </form>
