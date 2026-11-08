@@ -528,7 +528,7 @@ export default function App() {
                     </div>
                     <p className="pick__desc">{p.desc}</p>
                     <button className="pill pill--dark" onClick={openDemo}>
-                      詳細を見る
+                      Learn more
                     </button>
                   </article>
                 ))}
@@ -554,9 +554,6 @@ export default function App() {
                   <li><Check size={16} strokeWidth={3} /> Zero video frames uploaded to servers</li>
                   <li><Check size={16} strokeWidth={3} /> Reset session data in one click</li>
                 </ul>
-                <button className="pill-coral" onClick={openDemo}>
-                  try the demo <ArrowRight size={15} />
-                </button>
               </div>
 
               <div className="netlog" aria-label="Network panel showing zero image uploads">

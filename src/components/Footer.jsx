@@ -30,7 +30,7 @@ export default function Footer({
             className="pill pill--light pill--lg"
             onClick={onOpenDemo}
           >
-            Try it now <ArrowUpRight size={18} />
+            {user ? 'Study Space' : 'Get started'} <ArrowUpRight size={18} />
           </button>
         </div>
       )}
